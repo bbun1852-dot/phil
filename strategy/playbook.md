@@ -3853,6 +3853,14 @@ losing low brackets than the market did, and the print came in ABOVE the
 Cleveland nowcast (Aug: 0.4 vs nowcast 0.36; Oct: ~0.35 vs 0.24). Gate 2
 stands; on US headline-MoM ladders, take the market's implied sd and do not
 place the mean below the market ladder's centre on a nowcast alone.
+*Sharpened (DEEP-2026-11-11):* the row notes show the sd was already the
+ladder-implied 0.09 (`80efebb3b0a4` note: "sd 0.09 (market-ladder-implied,
+unsourced)"), so the sd was not the error this time. The binding clause is the
+MEAN: the 0.27 centre sat below the ladder and the 0.35 print. Before recording
+a headline-MoM bracket row, write the ladder's implied centre next to your mean
+in the note. If your mean is below the ladder's centre and only a nowcast
+supports it, use the ladder's centre. The evidence is still small (2 rows, one
+print, +0.005 and +0.030); grade it again at the Nov CPI print.
 
 **2026-08-21 update (18:11Z settlement): the Aug14-21 Musk weekly set's
 two >0.10-disagreement legs both settled, both LOST.** 240-259
@@ -8639,6 +8647,17 @@ are separate markets with slugs `polyv2-<sport>-...` (the only 4 v2 rows in the 
   priced it better than I did. Allocation (procedure only): on a release-rung family, record at most
   ONE row per rung per UTC day. Re-research only when a positive primary source appears or the mid
   moves >=0.10 since my last row. Otherwise the slot goes to other candidates.
+  - *Verified and sharpened (DEEP-2026-11-11).*
+    - jq over journal/forecasts.jsonl confirms 12 Gemini Carbon rows, all below the mid and all
+      settled Yes, with per-row dBrier vs mid summing to +0.986.
+    - In the 11-10 04:25Z -> 11-11 23:50Z window, the 58 tight-book (spread <=0.06) settled
+      forecasts ran +0.011 against the mid. The 9 tight Gemini rows contribute about +0.65 of the
+      +0.64 total, so without this family the window sits at the book.
+    - score.py `ai-release-mid`: SHADOW, settled=5, events=1, paired -0.084. The rule beat the
+      raw estimate but this is one event, so it is not promotable.
+    - Count rule for the allocation cap: the 1/rung/day cap counts ALL label variants of a rung
+      (`product-release` and `ai-model-release` rows on the same date question), because 3 of the
+      12 rows were filed under `product-release`.
 - **Box-office family openers (DEEP-2026-11-10, procedure only, no probability rule).**
   - Evidence: Cat in the Hat 20M+ `ada749212e1c` (own .10 vs mid .611, Yes, +0.659) and the
     Drummer Boy 9M+ under-read `281c94228034` (.62 vs .85 on a tight book, Yes, +0.122) both
