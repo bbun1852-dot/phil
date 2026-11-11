@@ -108,6 +108,7 @@ import json
 import os
 import pathlib
 import re
+import secrets
 import subprocess
 import sys
 import time
@@ -129,6 +130,7 @@ LOG_DIR = ROOT / "journal" / "screener"
 LEGACY_LOG_FILE = ROOT / "journal" / "screener.jsonl"
 QUOTA_DIR = ROOT / "journal" / "screener-quota"
 WORK_ROOT = ROOT / "reports" / "screener-work"
+EDGE_BOARD_ALLOCATION = ROOT / "reports" / "edge-board-allocation.txt"
 
 def log_file(ts):
     """The monthly screener log a row stamped ts (ISO UTC) appends to."""
@@ -335,13 +337,23 @@ def runner_id():
     return re.sub(r"[^A-Za-z0-9_.-]", "_", name)[:40]
 
 
+def new_holder_id():
+    """A lease holder id for one run: the runner name plus a random nonce.
+
+    runner_id() stays the same across a runner's runs, because the quota files
+    and funnel rows are keyed on it, so it cannot tell two runs apart.
+    """
+    return f"{runner_id()}-{secrets.token_hex(4)}"
+
+
 def open_funnel(now, candidates, screener, screened=0, batches=0):
     """Open (or reuse) this FULL cycle's funnel row; says so on stderr."""
     by_query = Counter(str(c.get("query") or "unlabeled") for c in candidates)
+    by_version = Counter(str(c.get("version") or "untagged") for c in candidates)
     cycle = funnel.open_row(now, runner_id(), {
         "screened": screened, "escalated": 0, "screener_batches": batches,
         "screener": screener, "pool_total": len(candidates),
-        "pool_by_query": dict(by_query)})
+        "pool_by_query": dict(by_query), "pool_by_version": dict(by_version)})
     print(f"screen: funnel row open for cycle {cycle} in "
           f"{funnel.FUNNEL.relative_to(ROOT)}; add this cycle's fields with "
           f"python3 core/funnel.py merge --cycle {cycle} --json '{{...}}'",
@@ -973,11 +985,24 @@ def cmd_collect(args):
           f"batches, escalated {len(escalated)}, day batches "
           f"{used}/{cfg['max_batches_per_day']} (by runner {by_runner})",
           file=sys.stderr)
+    allocation = edge_board_allocation()
+    if allocation:
+        print(f"screen: edge board {allocation}", file=sys.stderr)
     update_funnel(work_dir, {
         "screened": len(ranked), "escalated": len(escalated),
         "screener": f"collected {len(ranked)}/{expected} ({n_err} malformed), "
                     f"day batches {used}/{cfg['max_batches_per_day']}"})
     return 0
+
+
+def edge_board_allocation():
+    """The line core/edge_board.py wrote this cycle, or None. Advisory: it
+    changes no ranking. The board deletes the file before it runs, so a missing
+    file is a cycle where the board failed or was skipped."""
+    try:
+        return EDGE_BOARD_ALLOCATION.read_text().strip() or None
+    except OSError:
+        return None
 
 
 def update_funnel(work_dir, fields):

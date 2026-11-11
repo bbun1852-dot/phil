@@ -98,6 +98,11 @@ class PairedTest(unittest.TestCase):
 
 
 class Placeholder(unittest.TestCase):
+    def test_liquidity_line_comes_from_protected_config(self):
+        line = score.PROTECTED["placeholder_liquidity_usd"]
+        self.assertFalse(score.placeholder_book(row(0.6, 0.6, "won", liquidity_at_record=line)))
+        self.assertTrue(score.placeholder_book(row(0.6, 0.6, "won", liquidity_at_record=line - 0.01)))
+
     def test_placeholder_rows_leave_the_headline(self):
         real = row(0.6, 0.6, "won")
         rows = [real,
@@ -129,7 +134,10 @@ class Record(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.path = pathlib.Path(self.tmp.name) / "forecasts.jsonl"
+        tmp = pathlib.Path(self.tmp.name)
         for p in (mock.patch.object(forecast, "FORECASTS", self.path),
+                  mock.patch.object(forecast.funnel, "FUNNEL", tmp / "funnel.jsonl"),
+                  mock.patch.object(forecast.funnel, "WATCH_TRIGGERS", tmp / "triggers.jsonl"),
                   mock.patch.object(forecast.pmapi, "gamma_market", lambda _id: GAMMA),
                   mock.patch.object(forecast.pmapi, "book_quote", lambda _t: BOOK),
                   mock.patch.object(forecast.pmapi, "last_trade_price", lambda _t: 0.55)):
@@ -164,6 +172,15 @@ class Record(unittest.TestCase):
         out = self.record("1", 0.62)
         self.assertEqual(out["est_prob"], 0.62)
         self.assertNotIn("rule", self.rows()[0])
+
+    def test_forecast_rows_carry_the_market_version(self):
+        self.record("1", 0.5)
+        v2 = dict(GAMMA, version="v2", positionIds=["9", "8"])
+        with mock.patch.object(forecast.pmapi, "gamma_market", lambda _id: v2):
+            self.record("2", 0.5)
+        v1_row, v2_row = self.rows()
+        self.assertEqual((v1_row["version"], v1_row["token_id"]), ("v1", "111"))
+        self.assertEqual((v2_row["version"], v2_row["token_id"]), ("v2", "9"))
 
     def test_wide_spread_benchmarks_last_trade(self):
         # docs.polymarket.com/concepts/prices-orderbook: "If the spread is

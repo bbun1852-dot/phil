@@ -4666,11 +4666,189 @@ against this cycle's live lease (contrary to its own tick-type rule) and clobber
   funnel row, and each had to be backfilled by hand.
   - The fix is mechanical, and the operator has to make it: `core/forecast.py record` or watch.py's
     TRIGGERED launch should open a `tick_type: TRIGGERED` row via `core/funnel.py`.
+  - 2026-10-31: Status: ACTIONED by the operator (https://github.com/bennyjo/phil/pull/20).
+    `core/forecast.py record` adds each forecast to the cycle's funnel row (`recorded_by:
+    core/forecast.py`) and prints its `funnel_cycle`. On a FULL that is the `prepare` row. On a
+    TRIGGERED tick the first record opens a `tick_type: TRIGGERED` row with the fired `trigger`
+    keys (CYCLE.md step 5b).
 - **core/funnel.py `researched` type-check: Status: PROPOSED, LOW.** It is now subsumed by the
   item above: a core-opened row fixes the type.
+  - 2026-10-31: Status: ACTIONED by the operator (https://github.com/bennyjo/phil/pull/20).
+    `merge` refuses a `researched` value that is not a list of objects.
 - **Hourly lease nonce: Status: ENDORSED, MEDIUM, unchanged.**
 - **These stay PROPOSED and unchanged:** the score.py `threshold_sweep_no` robustness line, the
   screener-outcomes refresh, P11, P8, P9, P4, P7, the subclass auto-tagger, P1, P2, P3(a), and the
   counterfactual end-date.
 - **No new hourly proposals** apart from the funnel-row evidence update. The newest operator note
   is still 2026-10-13.
+
+## DEEP-2026-11-01 - deep-retro proposals and status
+
+- **core/funnel.py `researched` type-check: Status: ENDORSED, MEDIUM** (raised from PROPOSED/LOW;
+  the DEEP-2026-10-31 "subsumed" ruling is withdrawn).
+  - Five consecutive core-opened **FULL** rows were merged with `researched` as an int count:
+    10-31 16:15Z, 18:13Z, 20:13Z, and 11-01 00:14Z, 02:14Z.
+  - One of them also had `placed: 1` instead of the ledger id.
+  - The 04:15Z cycle and this deep retro repaired them by hand. A TRIGGERED-row fix would not
+    have caught any of these.
+  - Ask: `funnel.py merge` should reject a non-list `researched` or `placed`, and researched
+    entries without a `forecast_id`.
+  - Agent-side stopgap: `strategy/tools/funnel_check.py`.
+- **TRIGGERED funnel row: Status: ENDORSED, MEDIUM, unchanged.** Fifth miss: 11-01 00:24Z
+  (newmarket:6501463), backfilled at 04:15Z.
+- **Hourly lease nonce: Status: ENDORSED, MEDIUM, unchanged.**
+- **These stay PROPOSED and unchanged:** the score.py `threshold_sweep_no` line, the
+  screener-outcomes refresh, P11, P8, P9, P4, P7, the subclass auto-tagger, P1, P2, P3(a), and
+  the counterfactual end-date.
+- **No new hourly proposals.**
+
+## DEEP-2026-11-02 - deep-retro proposals and status
+
+- **core/funnel.py `researched` type-check: Status: ENDORSED, HIGH** (raised from MEDIUM).
+  - Sixth instance: the 2026-11-02T04:14:16Z core/screen.py-opened FULL row had
+    `researched: 5`. The agent-side stopgap (funnel_check) was skipped, and the deep retro
+    repaired the row.
+  - Two stopgap misses in two days show that the check has to live in `merge`: reject a non-list
+    `researched`/`placed`, and reject researched entries without a `forecast_id`.
+- **TRIGGERED funnel row: Status: ENDORSED, MEDIUM, unchanged.**
+- **Hourly lease nonce: Status: ENDORSED, MEDIUM, unchanged.**
+- **These stay PROPOSED and unchanged:** threshold_sweep_no, the screener-outcomes refresh, P11, P8,
+  P9, P4, P7, the subclass auto-tagger, P1, P2, P3(a), and the counterfactual end-date.
+- **No new hourly proposals.**
+
+## DEEP-2026-11-03 - deep-retro proposals and status
+
+- **core/funnel.py `researched` type-check: Status: ACTIONED (#20), closed.**
+- **TRIGGERED funnel row: Status: ACTIONED (#20), closed.**
+- **Hourly lease nonce: Status: ENDORSED, MEDIUM, unchanged.**
+- **resolve.py unreachable 48h void branch (Andersson `e746d7e1ba99`, 2026-10-03): Status:
+  ENDORSED, unchanged.** The row is now about a month past its end date.
+- **These stay PROPOSED and unchanged:** threshold_sweep_no, the screener-outcomes refresh, P11, P8,
+  P9, P4, P7, the subclass auto-tagger, P1, P2, P3(a), and the counterfactual end-date.
+- **No new hourly or deep-retro proposals.**
+
+## DEEP-2026-11-04 - deep-retro proposals and status
+
+- **Hourly lease nonce: Status: ENDORSED, MEDIUM, unchanged.**
+- **resolve.py unreachable 48h void branch (Andersson `e746d7e1ba99`, 2026-10-03): Status:
+  ENDORSED, unchanged.** Still open and past end date; MTM now +$4.29 (No at 0.39).
+- **Prop 40 `9a757f3a38c8` is also past end date (04:59Z today, No at 0.978).** Not a new proposal
+  yet: give the resolver its normal 48h. If it is still open at DEEP-2026-11-06, it becomes the
+  second instance for the void-branch proposal above.
+- **These stay PROPOSED and unchanged:** threshold_sweep_no, the screener-outcomes refresh, P11, P8,
+  P9, P4, P7, the subclass auto-tagger, P1, P2, P3(a), and the counterfactual end-date.
+- **No new hourly proposals. No new deep-retro proposals.**
+
+## 2026-11-04 20:4xZ - ledger.py fills the whole stake at the top ask regardless of its size (agent, FULL cloud)
+
+**Evidence.** Two NBA moneylines this cycle had a 1-cent spread made by a ~5,000-share bid
+and a ~5-share ask, with the next ask 0.19-0.20 higher:
+- Knicks (6374868): 0.73 bid (4942 sh), 0.74 ask (5 sh), then 0.93.
+- Spurs (6381463): 0.68 bid (4994 sh), 0.69 ask (5.13 sh), then 0.88.
+
+Nine books devig to 0.82-0.84 on both, so each shows a nominal edge of about 0.09-0.14
+against the top ask. A $5 stake needs ~6.8-7.2 shares, but only ~5 are on offer at that ask.
+`core/ledger.py cmd_place` fills `stake / ask` shares at `q["ask"]` and never checks
+`top_asks` size. A real taker fill would walk to 0.88/0.93, where the edge is gone.
+
+I skipped both as `no-ask` (playbook: under $25 of depth), so nothing was gamed. The protected
+engine would still have booked them at the token ask.
+
+**Ask.** In `cmd_place`, fill at the size-weighted average across `top_asks` for
+`stake/price` shares. Alternatively, reject when the best-ask size times the price is below
+the stake. That keeps "honest CLOB-ask fills" honest on token-ask books.
+
+## DEEP-2026-11-05 - deep-retro proposals and status
+
+- **ledger.py fills the whole stake at the top ask regardless of its size (hourly, 2026-11-04 20:4xZ):
+  Status: ENDORSED, HIGH.** Verified: `cmd_place` uses `q["ask"]` and `stake/(ask+fee)` shares and
+  checks only `min_order_size`, never top-of-book size. Prefer a size-weighted walk of `top_asks`
+  over outright rejection. Interim agent-side guard added to the playbook (DEEP-2026-11-05 rulings).
+- **Hourly lease nonce: Status: ENDORSED, MEDIUM, unchanged.**
+- **resolve.py unreachable 48h void branch (Andersson `e746d7e1ba99`): Status: ENDORSED, unchanged.**
+  Prop 40 `9a757f3a38c8` stays on watch until DEEP-2026-11-06 (No at 0.992, past end).
+- **These stay PROPOSED and unchanged:** threshold_sweep_no, screener-outcomes refresh, P11, P8, P9,
+  P4, P7, subclass auto-tagger, P1, P2, P3(a), counterfactual end-date.
+- **No new deep-retro proposals.**
+
+## DEEP-2026-11-06 - deep-retro proposals and status
+
+- **ledger.py top-ask depth (hourly, 2026-11-04 20:4xZ): Status: ENDORSED, HIGH, unchanged.**
+  `cmd_place` still has no `top_asks` size check.
+- **Hourly lease nonce: Status: ACTIONED (#25, 4f9dc64d), closed.**
+- **resolve.py unreachable 48h void branch (Andersson `e746d7e1ba99`): Status: REVISED, LOW.**
+  I read `core/resolve.py` lines 85-108. The early return for non-decisive live prices is
+  correct, so a market that still trades past a nominal end_date should stay open. Andersson
+  (0.275) and Prop 40 `9a757f3a38c8` (0.988, past 48h at about 05:00Z today) are both live
+  and awaiting real-world resolution. They are not a void bug. What remains is optional:
+  score.py `open_mtm` could label such rows "awaiting resolution". Prop 40 watch closed.
+- **NEW (deep-retro, operator, LOW): edge board verdict vs taker ROI.** econ-print prints
+  "Noise" while its taker ROI is -27% [-44%,-10%] over 62 trades. If taker ROI is meant to
+  inform the verdict, a family whose ROI CI excludes zero should be flagged. That is the
+  operator's call on `core/edge_board.py` semantics.
+- **These stay PROPOSED and unchanged:** threshold_sweep_no, screener-outcomes refresh, P11, P8,
+  P9, P4, P7, subclass auto-tagger, P1, P2, P3(a), counterfactual end-date.
+- **No new hourly proposals.**
+
+## DEEP-2026-11-07 - deep-retro proposals and status
+
+- ledger.py top-ask depth: Status: ENDORSED, HIGH (unchanged).
+- econ-print taker-ROI verdict semantics: Status: PROPOSED, LOW (unchanged).
+- NEW (operator, LOW): edge board verdict hysteresis. social-count flipped from Negative
+  (taker ROI CI [-64%,-12%]) to Noise ([-66%,+39%]) on +5 rows and +3 trades. Agent gates
+  keyed to boundary verdicts flap. Suggestion: mark verdicts whose CI endpoint is within
+  ~0.002 of zero as "(boundary)", or require 2 consecutive runs before a verdict changes.
+  Status: PROPOSED.
+- All other open items (threshold_sweep_no, screener-outcomes refresh, P11, P8, P9, P4,
+  P7, subclass auto-tagger, P1, P2, P3(a), counterfactual end-date, past_end_date label):
+  Status unchanged.
+- No new hourly proposals since DEEP-2026-11-06.
+
+## DEEP-2026-11-08 - deep-retro proposals and status
+
+- ledger.py top-ask depth (2026-11-04 20:4xZ): Status: IMPLEMENTED (operator #27, `walk_asks`).
+- NEW (operator, MEDIUM): `core/forecast.py` should record `best_ask_size_at_record` /
+  `best_bid_size_at_record`. Spread-only "tight" is fooled by token-size asks: both v2 TIGHT
+  baseline rows (`0dd569698c25`, `45ad4328d413`) had ~5-share top asks with the next level
+  +0.19. Needed before the first V2 read (~11-14). Status: PROPOSED.
+- NEW (operator, LOW): version table on core/edge_board.py (offered in the 11-07 note), using a
+  depth-aware tight definition; would retire strategy/tools/v2cell.py. Status: PROPOSED.
+- All other open items: Status unchanged.
+- No new hourly proposals since DEEP-2026-11-06.
+
+## DEEP-2026-11-09 - deep-retro proposals and status
+
+- No new hourly-agent proposals since DEEP-2026-11-08.
+- Forecast-row top-of-book size (DEEP-2026-11-08, MEDIUM): Status: OPEN (operator). It is still
+  wanted: v2cell.py now parses the agent's free-text `topask=` note as a stopgap, which is
+  fragile when a note lists both sides (`f645a3370abb`).
+- NEW (operator, LOW): V2 sweep volume. Day 1 (11-09 02:13Z) produced 4 V2 rows from 6 live
+  NBA books, against the expected 10-20/day. Two books had no sportsbook line ~22h before tip.
+  Options: nudge the sweep FULL toward the hours before tip-off, or plan the first v2 read for
+  ~11-17 instead of ~11-14. The agent-side rule (re-sweep skipped books before tip) is in the
+  playbook. Status: OPEN (operator).
+- All other items: status unchanged from DEEP-2026-11-08.
+
+## DEEP-2026-11-10 - deep-retro proposals and status
+
+- **No new hourly-agent proposals since DEEP-2026-11-09.** The one hourly strategy change in
+  that window was the `views-decay-mid` -> `ai-release-mid` swap (RETRO-20261109-2215). It is
+  ENDORSED: `views-decay-mid` had 0 tagged rows ever (grep of forecasts.jsonl), and the
+  release categories lose to the book long-run.
+- **Forecast-row top-of-book size (DEEP-2026-11-08, MEDIUM): Status: OPEN (operator).**
+  Unchanged.
+- **V2 sweep volume (DEEP-2026-11-09, LOW): Status: OPEN (operator), now more pressing.**
+  - Since 11-08 there are 14 V2 rows, and v2cell has n=4 settled tight at -0.008
+    [-0.024,+0.007].
+  - The pre-registered 11-14 read (>=25 settled v2 TIGHT) will almost certainly be
+    **insufficient data**.
+  - Recommend moving the read to ~11-17, or pinning one FULL in the ~22-23Z window before NBA
+    tips, when lines have posted.
+- **NEW (operator, LOW): playbook.md is 8,600+ lines.** The hourly Sonnet agent cannot hold
+  that in context. Rules added 6-8 weeks ago (for example, the box-office modal floor at about
+  line 7383) are effectively invisible.
+  - Ask: allow a compaction pass, either a deep-retro task with an explicit budget or a
+    CYCLE.md "read only the top N lines + grep" instruction.
+  - I did not compact it today. A rewrite of that size needs operator sign-off on what may be
+    archived.
+- All other items: status unchanged from DEEP-2026-11-08.

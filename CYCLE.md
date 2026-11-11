@@ -14,7 +14,8 @@ procedure exactly once, then stop. Work from this directory.
 - You may edit anything under `strategy/`, and write to `journal/retros/` and
   `reports/`. Only `core/ledger.py` and `core/resolve.py` write the ledger;
   only `core/forecast.py` and `core/resolve.py` write `journal/forecasts.jsonl`;
-  only `core/lease.py` writes `journal/lease.json`.
+  only `core/lease.py` writes `journal/lease.json`; only `core/archive.py`
+  and `core/scan.py` write `journal/archive/`.
 - Every probability estimate you record must be your honest belief — your
   calibration is measured (`core/score.py`), and gaming it destroys the
   experiment's value.
@@ -42,7 +43,8 @@ Every invocation runs as one of three ticks:
 
 - **FULL**: the whole procedure below.
 - **LIGHT**: step 1 and the open-position monitor only, then log, commit, stop.
-  Entered from the collision guard (step 0) or from pacing (step 0b).
+  Entered from the collision guard (step 0) or from pacing (step 0b). A
+  LIGHT tick that changed nothing logs and commits nothing (step 7).
 - **TRIGGERED**: invoked by the watch routine when `core/watch.py check`
   reported `trigger: true` this session. Skip step 0b's pacing and step 4's
   broad scan: the candidate set is the verdict's `context` array (plus at most
@@ -50,7 +52,8 @@ Every invocation runs as one of three ticks:
   runs normally, scoped to those candidates. Before placing any bet, check the
   ledger for an existing open position on the same market - a duplicate inside
   the hour means the watcher double-fired: log it, do not re-bet. Triggered
-  cycles do not count toward `min_full_cycles_per_day`.
+  cycles do not count toward `min_full_cycles_per_day`. A TRIGGERED tick has a
+  funnel row too: its first `core/forecast.py record` opens it (step 5b).
 
 ## Procedure
 
@@ -74,31 +77,32 @@ Every invocation runs as one of three ticks:
    before firing), with one exception: if that commit is a
    `cycle(triggered):` commit less than 45 minutes old naming the same
    trigger key, demote to LIGHT.
-   Then the **runner lease** (operator, 2026-09-06; moved onto `main`
-   2026-10-08): the tip guard cannot see a cycle that is still in flight on
-   the other runner, so a lease file on origin's `main`
-   (`journal/lease.json`, see `core/lease.py`) says who is mid-cycle. If
-   the environment variable `PHIL_LEASE` is set, loop.sh already took the
-   lease for this invocation: proceed, and never run the lease commands
-   yourself. Otherwise run `python3 core/lease.py acquire`.
+   Then the **runner lease** (operator, 2026-09-06; moved to its own
+   `lease` branch 2026-11-08): the tip guard cannot see a cycle that is
+   still in flight on the other runner, so a lease file on origin
+   (`journal/lease.json` on the `lease` branch, or on `main` while origin
+   has no `lease` branch; see `core/lease.py`) says who is mid-cycle. A
+   TRIGGERED invocation neither takes nor honours the lease: skip the rest
+   of this paragraph. If the environment variable `PHIL_LEASE` is set,
+   loop.sh already took the lease for this invocation: proceed, and never
+   run the lease commands yourself. Otherwise run `python3 core/lease.py acquire`.
    `"acquired": true` means proceed, and release the lease in step 9 after
-   your push. `"acquired": false` means **stop this invocation now**: no
-   settle, no log line, no commit, no push; end with the JSON's `reason` as
-   your final message. That covers both refusals: the other runner holds a
-   fresh lease (exit 3), or the lease could not be written (exit 4: origin
-   unreachable, the push refused, or local `main` behind or diverged from
-   `origin/main`). Stopping instead of running LIGHT is deliberate: a LIGHT
+   your push, or in step 7 when a LIGHT tick ends with nothing to commit.
+   `"acquired": false` means **stop this invocation now**: no settle, no
+   log line, no commit, no push; end with the JSON's `reason` as your final
+   message. That covers both refusals: another run holds a fresh lease
+   (exit 3), or the lease could not be written (exit 4: origin unreachable,
+   the push refused, or local `main` behind or diverged from `origin/main`). Stopping instead of running LIGHT is deliberate: a LIGHT
    tick still commits settled ledger and forecast rows next to the holder's
    cycle, which forks `main`, and the holder's own cycle settles and
-   monitors. A TRIGGERED invocation neither takes nor honours the lease. A
-   lease expires on its own after 50 minutes, so a run that died mid-cycle
-   cannot block the next one.
+   monitors. A lease expires on its own after 50 minutes, so a run that died
+   mid-cycle blocks the next ones for at most that long.
 
 0b. **Pace**: read `strategy/schedule.json`. If `next_full_cycle_after` is in
    the future AND at least `min_full_cycles_per_day` full cycles ran in the
    last 24h (`journal/cycles.log`), run a LIGHT tick: steps 1 and the
-   open-position monitor only, log one line, commit, stop. Otherwise run the
-   full procedure. Update the file (with a reason) whenever the coming hours
+   open-position monitor only, then log and commit as step 7 says, stop.
+   Otherwise run the full procedure. Update the file (with a reason) whenever the coming hours
    look genuinely empty — and clear it when they don't.
 
 0c. **CI health** (full cycles only): `python3 core/ci.py` reports the CI
@@ -118,6 +122,14 @@ Every invocation runs as one of three ticks:
    exclude placeholder-book rows (P5, operator 2026-10-23) and report them on
    their own line; that exclusion alone moved the forecast headline from
    -0.0019 to +0.0040 on the day it shipped, with no change in skill.
+   Then `python3 core/edge_board.py` (operator, 2026-11-05; offline, about a
+   second; if it fails, log one line and go on). It replays strategy variants
+   on settled forecasts and prints a variant table, an edge map with verdict
+   changes flagged, and an allocation line. Read it in steps 3 and 5. It is a
+   report: it moves no recorded probability, changes no betting rule, and a
+   variant's verdict there neither promotes nor retires a rule. If it shows
+   something a rule should bind, tag that rule under step 3's shadow rules, or
+   make the case in `journal/proposals.md`.
 3. **Retro** (only if new positions settled since the last retro): write
    `journal/retros/RETRO-<UTCdate-HHMM>.md`:
    - For each settled bet: was the estimate wrong, the fill bad, or the
@@ -143,6 +155,11 @@ Every invocation runs as one of three ticks:
    - Settled forecasts are graded the same way (deep retros additionally
      reconcile `journal/forecasts.jsonl` coverage against funnel researched
      entries, and grade skip reasons against settled forecast outcomes).
+   - **Variants are mine to add** in `strategy/variants.py` (optional;
+     contract in `core/edge_board.py`). Each takes a slot in the 6-rule
+     budget. The board keeps the last 14 days of rows out of everything it
+     prints except the variant's verdict word, so judge a variant by that word
+     and quote its line.
    - **Touch-family edits need a passing replay** (operator, 2026-10-23):
      change `strategy/tools/touch.py` or its shading rule
      `strategy/tools/touch_rule.py` (what `touch.py --mid` prints as
@@ -180,7 +197,10 @@ Every invocation runs as one of three ticks:
    Research allocation in step 5 STARTS from collect's top divergences - but
    the screener ranks, it does not gate: watch items, the mechanical-econ
    calendar and the sibling census still claim their research slots under the
-   existing rules. If `prepare` reports quota exhaustion, the Task tool is
+   existing rules. `collect` also repeats the edge board's allocation line on
+   stderr: among otherwise similar candidates, favor its `prefer` cells over
+   its `skip` cells. It is advisory and refuses nothing. If `prepare` reports
+   quota exhaustion, the Task tool is
    unavailable, or `collect` yields nothing, fall back to the current
    unscreened selection and say so in the funnel row's `screener` field.
    **Funnel row** (operator, 2026-10-25, P10): `prepare` opens this FULL
@@ -346,8 +366,19 @@ Every invocation runs as one of three ticks:
    Polymarket displays: the mid, or the last trade when the spread is wider
    than $0.10; separately from bets, in score.py). For candidates you intend to
    bet, record the forecast with `--skip-reason bet` BEFORE running `place`.
-   Put the returned id in the cycle's funnel row as `forecast_id`. Skips
-   where no concrete probability was formed (e.g. benchmark-unreachable)
+   **Funnel entry** (operator, 2026-10-31, the TRIGGERED residual of P10):
+   `record` adds the forecast to this cycle's `strategy/funnel.jsonl` row
+   itself, as a `researched` entry with `forecast_id` and
+   `recorded_by: core/forecast.py`, and prints the row's `funnel_cycle`. On
+   a FULL that is the row step 4 opened. On a TRIGGERED tick the first
+   `record` opens a `tick_type: TRIGGERED` row with the fired `trigger` keys,
+   and later records in the tick join it. Add everything else (skips without
+   a forecast, `placed`, `mode`, notes) with
+   `python3 core/funnel.py merge --cycle <funnel_cycle> ...` as in step 4;
+   a merged `researched` list keeps every core-recorded entry it does not
+   name. Never append a funnel row by hand for a FULL or TRIGGERED cycle;
+   this supersedes any playbook instruction to append one.
+   Skips where no concrete probability was formed (e.g. benchmark-unreachable)
    get no forecast — never invent an estimate. est_prob is your honest
    belief formed before anchoring on the price, exactly as for bets.
 5c. **Headline Arena** (off until the operator provisions credentials; FULL
@@ -382,7 +413,24 @@ Every invocation runs as one of three ticks:
    `--edge-class` is the playbook edge class the bet claims — score.py now
    splits brier_delta by it, so classify honestly, not aspirationally.
    Respect rejections — they are protected-cap enforcement, not errors to fix.
-7. **Log**: append one line to `journal/cycles.log`:
+   Binary Polymarket V2 markets bet like V1 markets. Neg-risk and combinatorial
+   V2 markets are read-only: research and forecast them like V1 markets, but
+   `core/ledger.py` refuses the bet and logs it to
+   `journal/v2-bet-skips.jsonl` (`v2_bets_skipped` in `ledger.py status`).
+6b. **Archive** (FULL cycles only, not TRIGGERED; operator, 2026-11-03):
+   `python3 core/archive.py` with a 10-minute timeout. It saves 5-minute price
+   series before they expire, about once a day and a few minutes at most. It
+   exits 0 even on failure, and a later run retries. Whatever it prints,
+   including a failure or a timeout, go on to step 7; never retry it, debug it,
+   or work around it this cycle. Step 8's `git add -A` commits its files.
+7. **Log**: a LIGHT tick that changed nothing ends here, with no log line,
+   commit or push, when all of these hold: step 1 settled 0,
+   `git status --porcelain` prints nothing, and there is nothing for the
+   operator to see (a failed fetch, a diverged `main`, or an open position
+   that needs attention still gets its line). Release the lease as step 9's
+   last paragraph says, if you hold it, and stop. Pacing counts only FULL
+   lines, so the skipped line changes no decision. Otherwise append one
+   line to `journal/cycles.log`:
    `<UTC ISO> cycle done: settled N, placed M, cash $X` (from ledger status).
    On a TRIGGERED cycle the detail that follows opens with
    `(TRIGGERED cycle: <key>` before anything else, so the tick type stays
@@ -419,4 +467,5 @@ Every invocation runs as one of three ticks:
    set), release it: `python3 core/lease.py release`. Release after the push,
    never before, so the other runner's next tip check sees your commit, and
    release even when the push failed: your tick is over, and release commits
-   onto `origin/main` itself.
+   onto origin's lease branch (or `origin/main` while there is none), not
+   onto your local `main`.

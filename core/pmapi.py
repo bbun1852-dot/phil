@@ -12,13 +12,17 @@ CLOB = "https://clob.polymarket.com"
 UA = {"User-Agent": "pearl-explorations-paper-trader/0.1"}
 
 
-def get_json(url, params=None, retries=3):
+def get_json(url, params=None, retries=3, body=None):
+    """GET url as JSON, or POST body as JSON when one is given. A list value in
+    params repeats the parameter."""
     if params:
-        url = url + "?" + urllib.parse.urlencode(params)
+        url = url + "?" + urllib.parse.urlencode(params, doseq=True)
+    data = None if body is None else json.dumps(body).encode()
+    headers = UA if body is None else {**UA, "Content-Type": "application/json"}
     last_err = None
     for attempt in range(retries):
         try:
-            req = urllib.request.Request(url, headers=UA)
+            req = urllib.request.Request(url, data=data, headers=headers)
             with urllib.request.urlopen(req, timeout=30) as resp:
                 return json.load(resp)
         except Exception as e:  # noqa: BLE001 — retry then surface
@@ -27,7 +31,15 @@ def get_json(url, params=None, retries=3):
     raise RuntimeError(f"GET {url} failed after {retries} tries: {last_err}")
 
 
+# docs.polymarket.com/market-data/discover-markets: "Repeat the parameter as
+# `version=v1&version=v2` to include both. [...] Omission uses the current
+# server default of CTF events (v1)." So a listing that omits it never sees V2.
+LISTED_VERSIONS = ["v1", "v2"]
+
+
 def gamma_markets(**params):
+    """List Gamma markets on every version, unless the caller names its own."""
+    params.setdefault("version", LISTED_VERSIONS)
     return get_json(f"{GAMMA}/markets", params)
 
 
@@ -39,6 +51,12 @@ def clob_book(token_id):
     return get_json(f"{CLOB}/book", {"token_id": token_id})
 
 
+def clob_books(token_ids):
+    """Books of up to 500 CLOB tokens in one request (docs.polymarket.com/
+    market-data/prices-order-books). A token with no book may be left out."""
+    return get_json(f"{CLOB}/books", body=[{"token_id": t} for t in token_ids])
+
+
 def _float(value):
     try:
         return float(value)
@@ -47,13 +65,19 @@ def _float(value):
 
 
 def book_quote(token_id):
-    """Best bid and ask of a CLOB token (None if a side is empty), with the
-    book's min_order_size in shares (None when absent)."""
+    """Best bid and ask of a CLOB token (None if a side is empty), its ask levels
+    as (price, size in shares) cheapest first, and the book's min_order_size in
+    shares (None when absent)."""
     book = clob_book(token_id)
     bids = [float(b["price"]) for b in book.get("bids", [])]
-    asks = [float(a["price"]) for a in book.get("asks", [])]
-    return {"bid": max(bids) if bids else None, "ask": min(asks) if asks else None,
-            "min_order_size": _float(book.get("min_order_size"))}
+    asks = sorted((float(a["price"]), float(a["size"])) for a in book.get("asks", []))
+    return {"bid": max(bids) if bids else None, "ask": asks[0][0] if asks else None,
+            "asks": asks, "min_order_size": _float(book.get("min_order_size"))}
+
+
+def bid_depth_usd(book):
+    """Dollars resting on the bid side of one CLOB book."""
+    return sum(float(b["price"]) * float(b["size"]) for b in book.get("bids", []))
 
 
 def last_trade_price(token_id):
@@ -111,25 +135,47 @@ def taker_fee_per_share(market, price):
 # Gamma tags each market with the CLOB protocol it trades on, and the version
 # alone selects the outcome ids: clobTokenIds for "v1", positionIds for "v2".
 # Both fields can be populated, so their presence does not select the
-# protocol (docs.polymarket.com/market-data/market-details). Whether /book and
-# the resolution fields work the same for V2 is unconfirmed, so V2 markets are
-# skipped until read-only V2 support lands. The V2 migration guide says to
-# "Reject missing or unsupported versions", so an untagged market is rejected
-# too (market_version returns None).
-SUPPORTED_VERSIONS = {"v1"}
+# protocol (docs.polymarket.com/market-data/market-details). The V2 migration
+# guide says to "Reject missing or unsupported versions", so an untagged market
+# is rejected too (market_version returns None).
+SUPPORTED_VERSIONS = {"v1", "v2"}
+# docs.polymarket.com/trading/positions/how-positions-work: a V2 Position ID's
+# first byte is its module: 1 BinaryModule, 2 NegRiskModule, 3 CombinatorialModule.
+V2_BINARY_MODULE = 1
 
 
 def market_version(market):
     return market.get("version")
 
 
+def position_module(position_id):
+    """Module of a decimal V2 position id, None for any other id."""
+    text = str(position_id)
+    return int(text) >> 248 if text.isascii() and text.isdigit() else None
+
+
+def tradable(market):
+    """True when Phil can bet this market: V1, or binary V2. Neg-risk and
+    combinatorial V2 markets settle on contracts Pearl Connect does not sign for,
+    so they stay read-only, with any unsupported or untagged version."""
+    version = market_version(market)
+    if version == "v1":
+        return True
+    ids = token_ids(market) if version == "v2" else None
+    return bool(ids) and not market.get("negRisk") \
+        and all(position_module(i) == V2_BINARY_MODULE for i in ids)
+
+
 def token_ids(market):
     """CLOB token ids of a gamma market record in outcome order, or None when
     the market is on an unsupported protocol version or its ids are unusable."""
-    if market_version(market) not in SUPPORTED_VERSIONS:
+    version = market_version(market)
+    if version not in SUPPORTED_VERSIONS:
         return None
+    # V1 ids are a JSON-encoded array, V2 ids a plain array.
+    raw = market.get("positionIds" if version == "v2" else "clobTokenIds")
     try:
-        ids = json.loads(market.get("clobTokenIds") or "null")
+        ids = json.loads(raw) if isinstance(raw, str) else raw
         outcomes = json.loads(market.get("outcomes") or "null")
     except (ValueError, TypeError):
         return None

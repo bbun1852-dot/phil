@@ -24,7 +24,7 @@ stores YOUR raw estimate as est_prob and that raw value is what a bet is sized o
 `core/score.py` promotes (PASS, >=20 events, 99.5% paired CI below zero) or retires (FAIL) a
 rule. Quote score.py's rule line when judging one. **No hand tallies for these rules in this
 file any more** — the "re-grade at n=X", "tally n=Y" clauses attached to them below are void.
-Budget 6 (all 6 slots used since RETRO-20261031-0415). Since #14 merged (2026-10-22 ~23:48Z) the 00:12/02:12/04:12Z FULLs recorded 35
+Budget 6 (all 6 slots used since RETRO-20261031-0415; RETRO-20261109-2215 retired the never-tagged `views-decay-mid` and gave its slot to `ai-release-mid`). Since #14 merged (2026-10-22 ~23:48Z) the 00:12/02:12/04:12Z FULLs recorded 35
 forecast rows and tagged 0 (score.py `rules: {}`): no rule had a slug. Now five do.
 
 | slug | applies to | raw | rule value | source |
@@ -32,7 +32,7 @@ forecast rows and tagged 0 (score.py `rules: {}`): no rule had a slug. Now five 
 | `postcount-mid` | social-media-postcount brackets not already decided by the live count | your bootstrap/pace read | CLOB mid | RETRO-20261016-0815 |
 | `knife-edge-mid` | any self-computed distribution whose centre is within 1.5 sd of the bracket/threshold edge (merges the 0.40-0.60 knife-edge cap, RETRO-20261012-1400, and the straddle rule; the cap is retired) | your computed P | CLOB mid | MrBeast straddle instances; GTA `63c1fb8c4d1e` (cap 0.60 vs book 0.88, lost) |
 | `earnings-mid` | earnings-beat rows with no issuer primary-source datapoint dated after the line was set | your estimate | clipped to mid +/-0.05 | RETRO-20261022-1430 |
-| `views-decay-mid` | multi-day view/count projections with fewer than 2 measured day-over-day decay ratios | your projection | clipped to mid +/-0.05 | RETRO-20261022-1620 |
+| `ai-release-mid` | AI-model / product release-date rungs ("released by/on <date>") where the raw est_prob is off the ladder mid WITHOUT a POSITIVE primary-source finding (launch live, or an official date). Negative checks ("not on the news page yet") do not count. | your raw read | CLOB mid | RETRO-20261109-2215: Fable 5.2+ settled Yes Nov 9; four later-than-market rows all lost: `59f1933102a7` .35/.555 (+0.224), `b0877b5340db` .65/.725 (+0.047), `8388516aeff8` .17/.273 (+0.160), `5c1c1d3f700b` .20/.807 (+0.603). Previously written as an untagged "ladder mid" clause (ai-release-anchor) that rows only noted as `rule view`, so score.py never graded it. Replaces `views-decay-mid` (retired unused: 0 tagged rows since RETRO-20261022-1620) |
 | `rally-below-mid` | Trump/Vance rally say-the-word reads (market-series, judgment) that sit BELOW the CLOB mid; not speaker-only transcript counts | your raw read | CLOB mid | NC-revert pre-registration (+0.20 threshold): SC+IA+FL below-mid raw n=20, +0.750 vs mid, RETRO-20261023-2215 (FL was a partial rally; the completed FL legs moved the other way, RETRO-20261024-0015 - untagged, the GA tagged rows are the first scored evidence). DEEP-2026-10-24 recount: the 8 completed-FL below-mid rows (AI, Drill, SI, Fish, Space, Jacksonville, Filibuster, Hell 15+; RETRO-20261024-0015) sum -0.567, so the whole pre-registration pool is about +0.18, UNDER its own +0.20 threshold, and one Fish row (0.50/0.91 book, -0.337) carries much of the swing. Kept in shadow because shadow costs nothing (raw sizes bets); score.py decides |
 | `series-recent6` | Trump/Vance rally market-series rows where the last-6 Laplace differs from the full-series Laplace by >=0.10 (coined/trending phrases decaying or surging inside the window) | full-series Laplace | last-6 Laplace | RETRO-20261031-0415: SI\|Super Intelligence full-series sat above the mid on a 5th straight No (`9c41a232a4f9` 0.40 vs book 0.24/0.29, recent6 view 0.25); AI `f66172016523` 0.235 vs recent6 0.125, No. Counter-instance: Data Center `afafed90f2f7` recent6 2/6 sat at/above full-series and also went No - hence shadow, not a hand verdict |
 
@@ -1642,6 +1642,7 @@ reads are now 12/12 against me.
 Mid-anchored control rows (RETRO-20261015-0625): Fable 5.2+ Oct 14
 `a301f1e0348d` 0.265/0.26 settled No, dBrier +0.003 -- flat, as the rule predicts.
 Fable 5.2+ Oct 24 (RETRO-20261025-0615): anchored `efd09c5220e7`/`1cd2488efaaa` flat; `84ad37e66d6f` (10-14, 0.85 vs mid 0.91, no primary-source URL) violated the Pre-record check and happened to win (dBrier -0.106) -- first later-than-market read to go my way; one event, rule unchanged, counts toward the n=8 shade-view re-grade.
+Fable 5.2+ Nov 9 (RETRO-20261109-2215): released Nov 9 (both by-Nov19 and on-Nov9 rungs Yes). All four below-mid rows lost (sum dBrier about +1.03); the .20-vs-.807 row recorded a NEGATIVE primary-source check as if it were evidence, against the clause above. The anchor is now the slugged shadow rule `ai-release-mid` (table at top): tag every such row so score.py grades it.
 
 **Treasury touch drift rule (RETRO-20260928-2215).** For a Treasury
 par-yield touch rung ("hit X% in <month>") with 5 or fewer prints left,
@@ -2098,6 +2099,14 @@ move as favorable or adverse.
      quarter-to-a-third of a 0.04 "edge". All 7 losing bets of
      2026-07-30/31 bought the cheaper side (0.34-0.52) off proportional
      devigs (DEEP-2026-07-31).
+     For multi-book medians pipe `core/odds.py odds <sport>` into
+     `strategy/tools/bookmed.py` (prints the per-book POWER median first)
+     and record that number; a note saying "proportional devig" on a
+     sub-0.60 side is a violation of this line. Evidence: the Nov 7 12:15Z
+     NBA rows (Nets .31, Wizards .21, Knicks .64, Nuggets .71) were all
+     recorded off proportional medians and all four scored worse than the
+     PM mid (RETRO-20261108-0215, RETRO-20261108-0415). This is the
+     existing method, not a new estimation rule: no slot.
    - **Check line freshness before calling a divergence an edge.** Scraped
      aggregators lag; PM sports makers don't. If ANY book already matches
      PM's number, or reports are mixed, assume PM reflects the current line
@@ -3834,6 +3843,17 @@ DOWNSIDE tail the market had already priced thin; the market's up-skew
 +0.03 shade under-weighted it. Gate 2 stands; on a skewed UK/US CPI ladder,
 move the mean toward the skew rather than shading by a token amount.
 
+**Gate-2 seventh line, US Oct-2026 CPI (RETRO-20261110-1615):** two
+forecast-only headline-MoM bracket rows (`80efebb3b0a4` <=0.1 .09 vs mid .06,
+`c22d77021806` 0.2 .32 vs mid .27) used a nowcast-ish mean 0.27 (Cleveland
+0.24, TD 0.30) with an unsourced sd 0.09. FRED CPIAUCSL Sep 336.298 -> Oct
+337.476 = +0.35%, so both legs settled No; own dBrier vs mid +0.0045 and
++0.0295. Same shape as lines 1-6: the unsourced sd put more mass in the
+losing low brackets than the market did, and the print came in ABOVE the
+Cleveland nowcast (Aug: 0.4 vs nowcast 0.36; Oct: ~0.35 vs 0.24). Gate 2
+stands; on US headline-MoM ladders, take the market's implied sd and do not
+place the mean below the market ladder's centre on a nowcast alone.
+
 **2026-08-21 update (18:11Z settlement): the Aug14-21 Musk weekly set's
 two >0.10-disagreement legs both settled, both LOST.** 240-259
 (cd3af116ed2a, No side, bid 0.252 vs est 0.16) lost to the actual count
@@ -4489,6 +4509,18 @@ Yes @0.80, est 0.85, -$5.00, RETRO-20261021-0215) cited "3/3 calls"
 found by searching "Netflix YouTube earnings call". One hit was a
 moderator read, and Q1 2026/Q4 2025, the two most recent unsearched
 calls, were never checked. Yes-side gate record after this: 1W/1L.
+
+**Method note (2026-11-04): earnings-call words below the mid need live-news and brand
+checks (RETRO-20261104-1620).** Uber Q3'26: "DoorDash" own 0.30 vs mid 0.66 rested on ONE
+prior transcript plus "the CEO rarely names competitors" - below the two-transcript minimum -
+and an analyst raised a DoorDash-Instacart storyline in Q&A (said, Yes). "Uber Eats" own
+0.25 vs mid 0.525 rested on exact-phrase 0/3 across mixed official/third-party transcripts
+for the company's own flagship brand (said 3x, Yes). Gates blocked both No bets. Before
+reading an earnings-call word below the mid: (1) one transcript plus judgment is not
+`method=transcript-count` - stay near the mid; (2) search the last 14 days of news for the
+named entity; an active storyline (deal, merger, lawsuit, launch) makes an analyst question
+likely and voids a stale count; (3) for the issuer's own brand or segment names, a 0/k
+exact-phrase count does not support a read more than ~0.10 below the mid.
 
 **Method note (2026-09-16): count only the named speaker's lines.**
 These markets resolve on what the SPEAKER says ("if Warsh says the
@@ -6360,6 +6392,11 @@ RETRO-20260929-2342. Stays a tracked observation, not a playbook rule —
 n=2 is far below the ~15-settlement floor CYCLE.md sets for acting on a
 read, and the two cases are in different categories (ai-model-release vs
 news). Re-visit if a third instance settles either way.
+**Third instance (RETRO-20261109-2215): market right, now 2-for-3 for the
+market.** Fable 5.2 on-Nov9 book jumped to .60/.80 with no source I could
+find at 18:3xZ (news page, models page, docs, release notes); the model
+shipped later that day. Still n=3, still not a hand rule; for release-date
+rungs the slugged `ai-release-mid` shadow rule now carries the question.
 
 ## 2026-09-30 15:45Z update: Core PCE Aug, Parcl Sep30 SET, AAA gas $4.50 settled (RETRO-20260930-1545)
 
@@ -6828,6 +6865,15 @@ read. The 90-day legs stay forecast-only (`unvalidated-method`).
   same event. `0f8f5b9bfebc` ('<=6' at count 6, 0.31 vs mid 0.275)
   shaded up for the Banda Aceh `mb` downgrade and won (-0.050). Keep
   applying the weight to forecasts in both directions.
+- **RETRO-20261108-2215: reviewed `mww` moved 0.1 too (n=1, procedure
+  only, no probability rule).** Nov 7 daily max: M5.9 mww reviewed at
+  00:17Z (`48a1fd71395a` 5.9-6.0 Yes .95, lost) read M5.8 mww by 16:2xZ
+  (`2a6b9fe14aa0` 5.7-5.8 .97, won). **Procedure: when a daily-max ladder
+  or count hinges on an event within 0.1 of a bucket edge, the last FULL
+  before resolution re-pulls that event from USGS (event detail, note the
+  `updated` time) and supersedes the row if the magnitude moved.** A second
+  `mww` revision across an edge would justify a shadow-slugged floor; until
+  then the mww exemption above stands for estimates.
 
 ## RETRO-20261007-0410 ruling: riding-level aggregator vs the book
 
@@ -7403,6 +7449,11 @@ would also have tripped max_spread). Earnings OVV subclass stays as is.
   19cf14c87979 (Aug) both leaned on the TE calendar figure against the
   book, and both were wrong. Treat TE as one input averaged with the
   seasonal-MoM base. It never justifies a claimed edge on its own.
+  RETRO-20261109-0415 addendum: the same holds for a self-built sd
+  around an unsourced centre. Oct-26 rows 4cc5863f9eb8/9c4567540b43
+  (<=0.6, own .32/.20 vs book .23/.11) and d6161362b48e (0.7-0.8, own
+  .33 vs last .68) all lost to the book; outcome 0.7-0.8. With no
+  sourced consensus, China CPI brackets stay forecast-only.
 
 ## DEEP-2026-10-14 rulings
 
@@ -8284,3 +8335,326 @@ with the one-liner in journal/retros/DEEP-2026-10-21.md.
   not cite it to open commodities bets.
 - **Rule registry is full (6/6).** A seventh rule needs score.py to retire one (FAIL) or promote
   one (PASS) first, or a deep retro has to free a slot with evidence.
+
+## DEEP-2026-11-01 rulings
+
+- **Run `python3 strategy/tools/funnel_check.py` after your last `core/funnel.py merge` of a
+  cycle, and fix any problem before you commit.** `researched` must be a list of dicts, each with
+  a `forecast_id`. `placed` must be a list of ledger ids.
+  - Evidence: five FULL rows in a row (10-31 16:15Z to 11-01 02:14Z) were merged with an int
+    count and needed a hand backfill (bf5bf705). The 02:14Z row still carried `placed: 1`.
+  - The operator type-check proposal is ENDORSED/MEDIUM. This rule is the agent-side stopgap.
+- **OVV relaxation fork: NOT MET.** Per-fold dBrier (227 rows, 184 events) is f0 +0.016,
+  f1 +0.048, f2 +0.067, f3 +0.023, f4 -0.006. Fold pnl is f3 +$11.46 and f4 +$100.11.
+  - Gate 1 needs both f3 and f4 negative. Re-check daily with the recipe, and do not pre-empt it.
+  - The Rhine `b2fb9bff5332` veto (own 0.45 vs 0.755, resolved No, about +$13.5 CF) is one row of
+    f4's pattern. It is not a carve-out.
+
+## Token-launch-by-date rows: cite the project's own TGE schedule first (RETRO-20261101-0615)
+
+- Before recording or superseding a "will X launch a token by <date>" row on venue signals
+  (pre-market perps, Binance Wallet prime/pre-TGE sales, tokenomics posts), find and cite the
+  project's own announced TGE date or vote options in the note. If none is published, say so.
+- Evidence: `65adcd1e5ac9` (Predict.fun by Oct31, 0.85, lost). It superseded a right-side 0.20 row
+  using a "prime sale -> TGE in 1-2 days" prior. A guide dated Oct 28 already showed a community
+  vote between Nov 1 and Dec 1, both outside the window. n=1. This is a research lookup, not an
+  estimation rule: it moves no probability mechanically and takes no registry slot.
+
+## 2026-11-01 18:15Z: AAA gas Nov 1 rows settled (RETRO-20261101-1815)
+
+- AAA Nov 1 printed in [4.1700, 4.1799] (change -0.4 to -1.4c after five ~-2c days). Drift centre
+  -2.0c missed by ~1c (`93bdd88c982d` 0.25 vs last 0.71, +0.478; `e6aa609bcfaa` 0.55 vs 0.365, +0.169).
+  The GasBuddy state 24h-change nowcast (-1.3 to -1.5c, `c7f964d848cd` 0.62) was closer but still
+  below the tight book (0.922/0.971 -> 0.95, +0.142).
+- **Tight-book tally (10-30 rule): book centre beat drift centre on 3 of 3 days (Oct 23, Oct 30,
+  Nov 1).** Deep retro grades at 5. Until then, when a GasBuddy state nowcast is available, write
+  its centre in the note next to the drift and book centres. AAA stays forecast-only.
+
+## DEEP-2026-11-02 rulings
+
+- **funnel_check is part of the commit step, not an optional follow-up.** Right before
+  `git commit` on any FULL tick, run `python3 strategy/tools/funnel_check.py`. Commit only when it
+  prints 0 problems. When `researched` is an int, rebuild it from the row's `forecast_ids` (one dict
+  per id: market_id, category, skip_reason, forecast_id, short note) and set `placed: []` when
+  nothing was placed.
+  - Evidence: the 2026-11-02T04:14:16Z row was a sixth instance, and the check was skipped. The
+    deep retro repaired it.
+- **AAA gas grader note (for day 5 of the 10-30 tally):** if the tight book has beaten the drift
+  centre on 4 or more of the 5 days, anchor AAA brackets on the tight-book mid. Deviate only with a
+  cited GasBuddy state nowcast, and then by at most half the gap.
+  - Evidence: `93bdd88c982d` (+0.478), `e6aa609bcfaa` (+0.169), `c7f964d848cd` (+0.142).
+  - At 3/3 this is not yet a rule. It takes no registry slot until it is graded.
+
+## DEEP-2026-11-03 rulings
+
+- **funnel_check (DEEP-2026-11-02 ruling): SHARPENED, not removed.** Operator PR #20 (4055a7ba)
+  makes `core/funnel.py merge` refuse a non-list `researched`, and `core/forecast.py record` now
+  writes the funnel entry itself, TRIGGERED ticks included. The int defect therefore cannot
+  recur through `merge`. Keep running funnel_check before a FULL commit as a cheap tripwire for
+  hand-edited rows. If it ever reports a problem now, that is a core bug, so write a proposal; do
+  not just repair the row. Evidence: `funnel_check --last 20` reports 0 problems over 11-02/11-03.
+- **Wide-book veto re-tested at ask prices (not mids): it STAYS.** A counterfactual over every
+  settled forecast with spread >0.06, $5 bought at the ask on the side our estimate favours:
+  - claimed gap >=0.10: n=66, -$15.3.
+  - gap >=0.20: n=24, +$6.5.
+  - gap >=0.30: n=8, -$10.1.
+
+  Month by month it is noise: Sep -$31, Oct -$3, Nov n=6 +$23. The 24h stream's wide-book
+  "wins" (forecasts `4e194e0b42dd`, `de86d98fba34`, `e43524bc14a8`, dBrier sum -2.14 vs mid) do
+  not survive pricing at the fillable ask. Do not cite wide-mid dBrier as evidence against the
+  veto. Re-run this ask-priced table, not the mid-scored one, if the question comes up again.
+- **AAA grader note: still ungraded.** The Nov 2 AAA rows settled against books wider than 0.06
+  (5 commodities rows, all wide), so they do not count toward the tight-book-vs-drift tally. The
+  tally stays at 3/3 tight. It needs two more tight-book days before the rule can be graded.
+- **Grading retros quote the resolver, not memory.** When a retro grades a settled forecast or bet,
+  copy `status` and `outcome_won` verbatim from the journal row and derive "right/wrong side" from
+  them. Evidence: RETRO-20261102-1435 graded `af76bf160bb1` (US sanctions on China, own 0.09 vs
+  0.1495) as "settled No, right side of mid". core/resolve.py had written `won`/`outcome_won: Yes`
+  in the same commit. A miss graded as a hit corrupts every lesson built on top of it.
+
+## 2026-11-03 10:1xZ: a draw price far above base rate means read the no-result clause first (FULL, cloud; provisional until settlement)
+
+- The screener's top 4 divergences were Saudi SPL draw markets priced 0.67-0.79 (base rate about 0.25).
+  Haiku read them as mispriced draws. They are not. PM soccer draw markets resolve **Yes** if the game
+  "is canceled, does not start by <date+2d>, or is abandoned with no official result". The SPL announced
+  on 2026-11-03 that Matchweek 13 (Nov 5-7) "will be rescheduled" after the AFC postponed Asian Cup 2027.
+  Forecasts: `d038c0ae119a`, `9cb5e6c64b4f`, `540a22361a66`, `5aa5605dd37c`, all est 0.93. The books
+  were widening past max_spread as the news priced in, so no bet was placed.
+- Procedure (selection, not an estimation rule): when a draw (or any "No"-default) leg sits far from its
+  base rate, quote the no-result clause and check the governing body's schedule news before modelling the
+  match. Grade it when these four settle (by Nov 10).
+- Status (RETRO-20261108-0815): 1 of 4 settled, 540a22361a66 won; the MW13 family's 9 settled rows
+  scored own Brier .0017 vs mkt .0049 (one correlated event). Bet 55c509720c48 won +$0.36. Three open.
+- Status (RETRO-20261110-0815): graded, 4 of 4 won (`540a22361a66` Nov 8, `5aa5605dd37c` Nov 9,
+  `d038c0ae119a` and `9cb5e6c64b4f` Nov 10; status `won` in journal/forecasts.jsonl). One correlated event
+  (the MW13 postponement), so this confirms the procedure once, not a rate. Keep it as written.
+
+## 2026-11-03 18:15Z: JOLTS Sep bet lost, AAA Nov 3 missed low (RETRO-20261103-1815)
+
+- **JOLTS: no sub-0.10-edge bet against a same-direction ladder tilt.** Bet `7f45e8fe6a72` (No
+  >=7.4M, est 0.863, entry 0.78) lost: BLS 7.5M vs LinkUp centre 7.05M. LinkUp miss log vs BLS first
+  print: Jul -0.06, Aug -0.11, Sep +0.45 (M). Until that log reaches n>=5, a JOLTS bet needs edge
+  >=0.10 when the ladder mids lean away from the LinkUp centre on the side being bet against.
+  Selection rule only: moves no probability, takes no registry slot. Still record the LinkUp centre.
+- **AAA next-day centre: use the 3-day mean daily change, not the latest day.** Nov 1 the -2.0c drift
+  overshot (RETRO-20261101-1815); Nov 3 the carried latest-day -0.3c undershot a ~-2c print
+  (`208def9aa091` <4.15 at 0.02 vs mid 0.20, outcome Yes). Write the 3-day mean as the centre, sd at
+  least half the range of the last 3 daily changes, and keep the GasBuddy/book centres in the note.
+  AAA stays forecast-only; the tight-book tally (3/3) is unchanged because Nov 3 books were >0.30 wide.
+
+## DEEP-2026-11-04 rulings
+
+- **KEEP the three hourly edits of 2026-11-03, all as provisional selection/method rules.**
+  - *No-result clause first* (Saudi MW13 draws): sound. It already produced compliant bet
+    `55c509720c48` (draw Yes @0.93, est 0.975, spread 0.018, one leg of the four). Grade it with the
+    four forecasts by Nov 10. Asymmetry reminder: at 0.93 a win pays $0.37 and a loss costs $5, so
+    resolver/reschedule risk must be quoted, not assumed; do not add a second MW13 leg: each game
+    is its own event for the $10 cap, but all legs ride one SPL scheduling decision (correlated).
+  - *JOLTS edge >=0.10 against a same-direction ladder tilt*: keep. `7f45e8fe6a72` lost because the
+    benchmark (LinkUp 7.05M) missed by +0.45M; the reasoning followed the benchmark correctly. n=3
+    LinkUp misses is insufficient to discount LinkUp itself; the rule only raises the bar.
+  - *AAA 3-day mean centre*: keep, forecast-only. The Nov 1 overshoot and the Nov 3 undershot
+    (`208def9aa091`) were both latest-day extrapolations in opposite directions; smoothing fits both.
+- **Sensing note: collapse a resolved-by-clause sibling cluster after one read.** The same Saudi
+  MW13 draw legs filled the screener's top 4 escalations on at least four FULLs (2026-11-03 10Z to
+  2026-11-04 04Z). Once a cluster's driver is established and recorded, note the cluster in the
+  cycle and research only legs whose ask moved; spend the other escalation slots on the rest of the
+  pool. This is about research allocation, not about the queries (pool 906, stable mix).
+
+## DEEP-2026-11-05 rulings
+
+- **Keep: earnings-call words below the mid need live-news and brand checks** (2026-11-04 method
+  note). Evidence: Uber "DoorDash" `7131ba4d2f0c` (+0.374 vs mid) and "Uber Eats" `4d0e3e96742a`
+  (+0.337) were the two worst forecast rows of the day; the correct below-mid reads ("Robotaxi"
+  `a62806f82c5a`, "Freight" `c6f4cb8934bc`) were count-based. Unchanged.
+- **Pre-placement depth check:** before `place`, confirm
+  `top_asks[0].size * ask >= stake`. If not, compute the size-weighted fill across levels for the
+  full stake and use THAT price for the edge test. Since operator #27 (2026-11-07, `walk_asks` in
+  core/ledger.py) the engine itself walks the asks and refuses unfillable stakes, so the ledger no
+  longer flatters us; the check stays because the EDGE test must use the walked price, not the
+  top ask (DEEP-2026-11-08). Evidence: Knicks 6374868 / Spurs 6381463 showed 5-share top asks with the next level
+  +0.19; both were correctly skipped.
+
+## 2026-11-06 02:15Z: post-event say-the-word re-quote (RETRO-20261106-0215)
+
+- **Post-event say-the-word rows re-quote before recording.** ABNB "Take Rate"
+  `9c79e34b5c11` was recorded at 22:19Z after the call ended at a prior-based 0.65 while
+  the note cited a stale 0.07/0.69 book; core captured 0.991/0.999 at record (resolved Yes,
+  +0.12 Brier vs mid). Rule (process, not an estimation rule): once the event has ended,
+  run `strategy/tools/quote.py` immediately before `forecast.py record`; if the book sits
+  >=0.95 or <=0.05, find the transcript/clip first, and if none is found, write the
+  post-event book into the note and weigh it as evidence of what was said.
+
+## DEEP-2026-11-06 rulings
+
+- **Social-count bet bar (category-bar, forecast-only).** Post-count, view-count and other
+  social-media count brackets (edge board family `social-count`) are forecast-only. Use skip
+  reason `category-bar` and keep recording the honest raw estimate (and `postcount-mid` where
+  it applies). Evidence: `core/edge_board.py` 2026-11-06 shows social-count Negative,
+  102 rows / 34 events, dBrier +0.0280 [+0.0011,+0.0550], taker ROI -38% [-64%,-12%] on
+  50 trades. `postcount-mid` is SHADOW, n=10, +0.0205. Lift the bar only when a deep retro
+  quotes the edge board line for social-count with a verdict other than Negative and a
+  taker ROI CI that is no longer entirely below zero.
+- **Yes-side say-the-word suspension (DEEP-2026-10-21): reaffirmed at taker prices.**
+  Settled say-the-word forecasts on books with spread <=0.06 and an edge >=0.04 vs the
+  executable price split as follows: buy-Yes n=67 at -13.7% ROI, buy-No n=46 at +38.7%.
+  These are rows, not events, so treat the CI as wide. Ledger: Yes n=11 at -$35.56, No n=12
+  at -$7.73. The No side stays open at normal gates. Ledger and forecasts disagree on it,
+  which is insufficient data to change it either way.
+- **Earnings: beating the mid on a wide book is not edge.** Replaying every settled earnings
+  forecast at executable prices (Yes at ask or No at bid, edge >=0.04) gives n=14 at
+  -2.9 units, and the edge board shows earnings taker ROI -36%. The cell's -0.032 dBrier vs
+  the mid (n=35) comes from wide books: n=19 at -0.040, against tight books n=17 at -0.0025.
+  Do not loosen the wide-spread veto for earnings. Evidence: BGC `da9f2127c6d2`, ABNB
+  `8db579678fe0` and VIRT `3c31dd187a0e` were mid-scored wins on wide books, and USFD
+  `da5ca005a275` (0.62 vs 0.28, missed) was a wide-book loss.
+- **Read the edge board allocation line, but gates still bind.** "prefer say-the-word" does
+  not lift the Yes-side suspension. "skip news" agrees with the news process-shape bar
+  (RETRO-20260918-1518).
+- **Kept:** the post-event say-the-word re-quote (RETRO-20261106-0215), the top-of-book depth
+  skip (DEEP-2026-11-05) until the core fix lands, and the earnings-call-word rule.
+
+## DEEP-2026-11-07 rulings
+
+- **Social-count bet bar LIFTED (pre-registered condition met).** The DEEP-2026-11-06 bar
+  said to lift when the edge board showed social-count as anything other than Negative with
+  a taker ROI CI no longer entirely below zero. `core/edge_board.py` 2026-11-07 shows
+  `social-count 107 (35) +0.0244 [-0.0022,+0.0510] ... 53 -13% [-66%,+39%] Noise (was Negative)`.
+  Both conditions hold, so the bar is lifted and normal gates apply again (min_edge,
+  outside-view-veto for countable brackets, `postcount-mid` SHADOW). Be honest about it: the
+  point estimate is still adverse (+0.024), and the gap slope is about 0 (-0.08). Nothing here
+  is positive evidence, and both verdicts sat on the CI boundary. **Reinstate the bar
+  automatically, with no deep retro needed, the first time the edge board prints
+  social-count Negative again.** An hourly cycle that sees that line records it in its
+  retro and uses skip reason `category-bar`.
+- **Yes-side say-the-word suspension: KSC ladder replay, kept.** The Cape Canaveral ladder
+  (RETRO-20261107-0215) looked like a vindication of the Yes side, because the
+  own-above-market Yes reads went 6W/2L against the mid. At executable prices it was not.
+  The legs with an edge of at least 0.04 vs the ask were Space Force `45b5edaa6633` at
+  .70, Mars `6f0681a0ead8` at .62, Moon `a8ffa453d5fe` at .57, SpaceX `67ea540bfa29` at .35
+  and AI `98c87e10c87d` at .34. Bought at the ask, they net -0.21 units over 5 stakes. It is
+  also one event with correlated legs. **Insufficient data; the suspension stands.**
+- **The 24h forecast stream repeats the pattern.** Over 31 non-placeholder settled forecasts
+  (since 2026-11-06 04:16Z), the mean is -0.029 vs the recorded mid. Tight books (spread
+  <=0.06, n=15) are **+0.011**, behind the book. Wide books (n=16) are -0.067, which comes
+  from mid-scoring rows like WTI `11e56c2d6e1f` (.01/.95 book) and Silver `87926dc20c00`
+  (.50/.80). Beating the mid on wide books is still not edge (DEEP-2026-11-06 earnings
+  replay). No gate changes.
+- **Watch-item hygiene.** I moved 22 of 28 `schedule.json` watch_items to
+  `strategy/watch-archive.jsonl`. Their events are past, and every id they carry is settled
+  (0 open forecasts), or they name no ids and their date is past. That cuts 38.8KB to about
+  half, which every tick reads. Kept: Tallahassee/FL (`07db025d1b8b` open), Sweden PM
+  (`e746d7e1ba99`), the validated-feed sweep, Parcl Dec31, Serbia (`ce0db5a673e4` open) and
+  Oct Core CPI. **Rule:** a FULL cycle that grades the last open id of a watch item archives
+  it in the same commit.
+
+## V2 first-week forecast sweep (operator note 2026-11-07 ~08:30Z; integrated 2026-11-07 12:1xZ FULL, cloud)
+
+**Rule (forecast rows only; bet rules unchanged).** From **2026-11-09 through
+2026-11-15** (UTC dates of the FULL tick), every FULL cycle records a step-5b forecast
+for **every live V2 book** the scan kept, whether or not the screener sampled it into
+the pool. "Live V2 book" = a scan record with `version: "v2"` (scan stderr: `v2
+markets kept: N`; the thin/empty-book drops are core's call, not mine). Re-quote each
+with `strategy/tools/quote.py` before recording, as for any row.
+- NBA (and any other sport) moneylines: benchmark on sportsbook odds via `python3
+  core/odds.py odds basketball_nba` -> `strategy/tools/devig.py`. One call covers
+  every game on the slate, so the sweep costs ~1-3 credits a cycle, inside the
+  10-12/day budget. Form the estimate from the devigged book, then compare.
+- Skip reason: `bet` only if the normal gates pass (min_edge vs the live ask, V2
+  binary only; neg-risk/combinatorial V2 is refused by ledger.py anyway); otherwise
+  `no-edge` / `market-agrees` as usual. Category: the existing family slug
+  (`nba-moneyline`).
+- A market already forecast this window and not materially moved (no new
+  injury/lineup news, book within 0.03 of the last record) is not re-recorded:
+  one row per market per day at most, superseding the earlier row when re-recorded,
+  so the cell counts events, not repeats.
+- If odds.py reports the key missing or the budget exhausted, record no row for
+  that game (never invent an estimate) and log it in the cycle line.
+
+**Scoring.** The cell is `v2` on the TIGHT slice only (spread at record
+`best_ask_at_record - best_bid_at_record <= 0.06`); wide books flatter dBrier
+(DEEP-2026-11-07: wide -0.067 vs tight +0.011 over 24h). Until `core/edge_board.py`
+grows a version table, compute it with `python3 strategy/tools/v2cell.py --since
+2026-11-09` and quote its `v2 TIGHT` line in every retro that settles a V2 row,
+next to the `v1 TIGHT` baseline it prints.
+
+**Baseline at integration (2026-11-07 12:1xZ, `v2cell.py --since 2026-11-01`):**
+`v2 TIGHT n=2 events=2 brier_delta=-0.0558`, `v2 wide n=2 +0.0081`, `v1 TIGHT n=69
++0.0116`. n=2 is nothing; the first read is due at ~50 settled rows (~11-14).
+
+**Why (evidence).** Forecast rows/day fell 53 (11-01) -> 30 (11-06), and Phil recorded
+4 V2 rows on 11-04 and none since (`journal/forecasts.jsonl` version counts), while the
+11-07 12:13Z scan kept 7 live V2 books, all NBA moneylines (`v2 markets kept: 7`), in
+a family the edge board rates Real (allocation `prefer family=sports-moneyline`).
+They settle in 2-3 days, so the sweep is the fastest feedback channel available.
+**Early start (CORRECTED by DEEP-2026-11-08):** the 11-07 12:16Z cycle claimed to forecast
+the live V2 books, but all 7 NBA rows it wrote (`89f933d16902`, `a1e32bfe49a9`,
+`339b313b18fe`, `5869b8013740`, `530b12235ac6`, `70d16c0a0336`, `954a916e0905`) are
+**v1** markets (slugs `nba-<a>-<b>-<date>`, `version: "v1"` stamped by core). The V2 books
+are separate markets with slugs `polyv2-<sport>-...` (the only 4 v2 rows in the file are
+11-04 `polyv2-nba-*`). Recording the v1 twin does NOT feed the v2 cell.
+- **Procedure:** take the market id from the scan record with `version: "v2"` (slug
+  starts `polyv2-`), not from the same game's v1 listing. After the batch, run
+  `python3 strategy/tools/v2cell.py --since 2026-11-09` and check the v2 n rose by the
+  number of V2 rows you meant to write; if it did not, you recorded v1 twins - say so in
+  the cycle line.
+- **One-sided depth caveat for the TIGHT slice:** both "v2 TIGHT" rows in the baseline
+  (`0dd569698c25` Knicks .73/.74, `45ad4328d413` Spurs .68/.69) had ~5-share top asks with
+  the next level +0.19 (proposals.md 2026-11-04 20:4xZ). Tight by spread, not by depth:
+  their -0.0558 is a mid-scoring artifact of the same kind as wide books. When recording a
+  V2 row, put the top-ask size in the note (`topask=<shares>`); in the retro read, count a
+  row whose top ask is under $25 as wide, whatever its spread.
+- **DEEP-2026-11-09: v2cell.py now applies the depth test itself.** A row with a sub-$25
+  top ask (first `topask=` x best_ask) is demoted to wide automatically, and the two
+  pre-topask artifacts (`0dd569698c25`, `45ad4328d413`) are hard-demoted. Re-run on
+  `--since 2026-11-01`: the 11-04 "v2 TIGHT -0.0558" becomes **n=0**, which confirms it was
+  wholly the depth artifact. Day 1 of the sweep: IND-DAL `27014641943a` (topask=31 sh at
+  .61 = $19) is wide, so 3 of 4 rows are tight. Write the recorded side's `topask=` FIRST
+  in the note (`f645a3370abb` lists Spurs then Suns; the tool reads the first).
+- **Benchmark tag (DEEP-2026-11-09):** an ML inferred from a point spread is an
+  unvalidated conversion. Write `spread-derived` in the note when you use it (both 11-09
+  rows `d9302a833288`, `27014641943a` already do); v2cell splits the TIGHT line into
+  odds-bench vs spread-derived so method noise cannot masquerade as a V2 effect.
+- **No-benchmark skips (DEEP-2026-11-09):** MEM-TOR and CLE-CHA were skipped at 02:13Z with
+  no line. That is allowed once, but the operator asked for EVERY live V2 book: a skipped
+  book must be re-swept on the next FULL before its tip (lines post on game day), and a
+  game that reaches tip with no row is named in the cycle line. Volume check: the operator
+  expected 10-20 rows/day and ~50 settled by ~11-14; day 1 gave 4 (3 tight). If fewer than
+  25 v2 TIGHT rows have settled by the 11-14 deep retro, the first read is **insufficient
+  data**, not a verdict.
+- **DEEP-2026-11-10: `ai-release-mid` kept, and its scope is pinned to one category label.** The
+  long-run record backs the hourly swap (RETRO-20261109-2215). score.py has release-date rows
+  behind the book in both labels they were filed under: `ai-model-release` n=52 at +0.056 and
+  `product-release` n=13 at +0.046. The Fable 5.2 family was split across both labels
+  (`59f1933102a7`/`b0877b5340db` ai-model-release, `8388516aeff8`/`5c1c1d3f700b`
+  product-release), which halves every per-category read. From now on, file AI-model
+  release-date rungs as `ai-model-release` and tag them `ai-release-mid`. Use
+  `product-release` only for non-AI products.
+- **Gemini Carbon settled Yes Nov 10 (RETRO-20261110-1820).** 12 rows over 9 days, all below the mid
+  and all worse than it (sum dBrier about +0.99). Each one cited the lack of a Google date or
+  changelog entry, which is the negative-check pattern the clause above already rules out. This
+  is the second family in two days with the same failure (Fable 5.2+). Belief update, not a rule:
+  "no official date yet" is the normal state right before every AI release this autumn, so it is
+  not evidence of lateness. A dated precedent (Argon 13d defenders->GA) is evidence, and the book
+  priced it better than I did. Allocation (procedure only): on a release-rung family, record at most
+  ONE row per rung per UTC day. Re-research only when a positive primary source appears or the mid
+  moves >=0.10 since my last row. Otherwise the slot goes to other candidates.
+- **Box-office family openers (DEEP-2026-11-10, procedure only, no probability rule).**
+  - Evidence: Cat in the Hat 20M+ `ada749212e1c` (own .10 vs mid .611, Yes, +0.659) and the
+    Drummer Boy 9M+ under-read `281c94228034` (.62 vs .85 on a tight book, Yes, +0.122) both
+    came from Friday-only arithmetic.
+  - On every family/animated opener, write the Fri->weekend multiplier you used in the
+    rationale, taken from at least 2 named comps. A bare Friday x constant is not enough.
+  - The category record is drifting the wrong way: score.py box-office is n=60 at +0.027,
+    against n=42 at +0.005 when the modal floor was frozen. By my row-level bootstrap
+    (correlated rows, so optimistic), wide books are n=26 at +0.094 [+0.027,+0.170] and tight
+    books are n=53 at -0.018 [-0.054,+0.015].
+  - So on WIDE box-office books the mid has been right against our deviations, the opposite
+    of the whole-stream wide-book pattern. The category stays no-bet. Revisit at the
+    DEEP-2026-11-17 retro.
+- **Large deviations against TIGHT books still lose (DEEP-2026-11-10, whole forecast stream,
+  my row-level bootstrap, not score.py).** This is supporting evidence for the existing >0.10
+  claimed-edge veto. No change.
+  - Tight books with |est-mid|>=0.10: n=368 at +0.026 [+0.005,+0.050]. The November rows are
+    n=23 at +0.075. October was n=145 at -0.017, so the effect is not uniform.
+  - Tight books with |est-mid|<0.10: n=1988 at +0.0002 (at the book).

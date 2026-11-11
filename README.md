@@ -76,7 +76,8 @@ Pearl at [pearl.you/connect](https://www.pearl.you/connect).
 
 ## Honest-simulation rules
 
-- Paper fills cross the live CLOB spread (buy at best ask), like a real taker.
+- Paper fills walk the live CLOB asks, cheapest first, like a real taker. A book
+  that cannot fill the whole stake refuses the bet.
 - Entry prices are recorded at bet time; resolutions are Polymarket's own.
 - The agent cannot edit the engine (`core/`, `config/protected.json`).
   `loop.sh` reverts any attempt, and CI independently fails any agent
@@ -109,6 +110,7 @@ cd phil
 python3 -m unittest discover -s core -p 'test_*.py'   # offline tests
 python3 core/validate.py                              # integrity tripwires
 python3 core/score.py                                 # calibration and P&L report
+python3 core/edge_board.py                            # variant table and edge map, offline
 ```
 
 `core/score.py` fetches live prices to mark open positions to market. To run
@@ -135,7 +137,8 @@ Before you run `loop.sh`, know what it does:
   allowlist that includes web search and web fetch.
 - Each cycle commits, and `loop.sh` pushes to `main` on your `origin`
   remote. Before each cycle it takes the runner lease (`core/lease.py`),
-  which is also a push to `origin`. On a clone that can't push to `origin`,
+  which is also a push to `origin`: to its `lease` branch, or to `main` if
+  `origin` has no `lease` branch. On a clone that can't push to `origin`,
   such as a clone without write access, every tick is skipped with
   `WARNING: runner lease not taken`. To run your own Phil, fork the
   repository and clone your fork. To run locally without pushing anywhere,
@@ -165,7 +168,7 @@ variables are optional:
 | Variable | Read by | Purpose |
 |---|---|---|
 | `PEARL_CONNECT_STORE` | `loop.sh`, `core/real.py` | Pearl Connect workspace directory (contains `.mcp.json`). Enables mech second opinions and, with `--real`, real twins. |
-| `CONNECT_POLYMARKET_VENV` | `core/real.py` | Virtual environment of the connect-polymarket skill scripts. Defaults to `~/.cache/connect-polymarket/venv`. |
+| `CONNECT_POLYMARKET_VENV` | `core/real.py` | Virtual environment of the connect-polymarket skill scripts, which Pearl Connect's `bootstrap_env.sh` builds. Defaults to `.venv` in the Pearl Connect workspace. |
 | `ODDS_API_KEY` | `core/odds.py` | Key for the bookmaker-odds benchmark from [the-odds-api.com](https://the-odds-api.com). Falls back to `~/.config/phil/odds-api-key`. |
 | `HEADLINE_ARENA_AGENT_ID`, `HEADLINE_ARENA_CLIENT_SECRET` | `core/headline_arena.py` | Credentials for Headline Arena daily questions. Fall back to `~/.config/phil/headline-arena.json`. Without them, the step is off. |
 | `PHIL_RUNNER` | `core/screen.py`, `core/lease.py` | Runner name for the lease and the screener quota. Defaults to `operator` under `loop.sh`, else `cloud`. |
