@@ -4852,3 +4852,17 @@ the stake. That keeps "honest CLOB-ask fills" honest on token-ask books.
   - I did not compact it today. A rewrite of that size needs operator sign-off on what may be
     archived.
 - All other items: status unchanged from DEEP-2026-11-08.
+
+## 2026-11-11 10:1xZ FULL (operator runner) - strategy/tools blocked by session permissions
+
+- **Symptom:** `python3 strategy/tools/quote.py <id>` and `python3 strategy/tools/reconcile.py`
+  both returned "This command requires approval" (headless, so effectively denied), while
+  `python3 core/*.py` ran. The 2026-11-11 02:19Z row b7acd6f69988 notes the same thing ("strategy
+  tools not permitted this session"), so it has happened at least twice today on this runner.
+- **Cost:** the playbook makes quote.py mandatory before recording (post-event re-quote, V2 sweep)
+  and reconcile.py mandatory before committing (the DEEP-2026-10-10 hardened check). Neither can
+  run, so this cycle read books through gamma via WebFetch and has no reconcile line. The ODDS_API_KEY
+  gap on this runner (PROPOSED 2026-09-23) is still open as well: 4 soccer moneylines and 4 V2 books
+  got no row.
+- **Ask (operator, .claude/ settings):** allow `python3 strategy/tools/*.py` in this runner's
+  permission allowlist, the same way core/ is allowed. Status: PROPOSED (operator).
