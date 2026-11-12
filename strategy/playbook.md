@@ -5850,6 +5850,13 @@ the mid and all lost. Per `core/counterfactual.py`, now 15 settled, 10
 events, CF 6W/9L, -$33.93, brier_delta +0.0336 (> 0), so **the bar stays**
 under the pre-registered test. That miss is the same "not done yet" bias
 ("search in progress argues days not hours").
+Sharpened DEEP-2026-11-12: the Huang ladder is 8 bar rows on one news
+event (Nov11 rung `a3b1ef048552`/`4804a6ffd633` resolved No, 2W +$4.78;
+Nov12/Nov13 rungs 6L -$30.00), so it is -$25.22 of the -$33.93 and the
+"10 events" count is an upper bound. The verdict does not hinge on it:
+the 7 non-Huang rows alone are CF 4W/3L, -$8.71. The bar stays. Keep re-checking
+at each deep retro per the Re-open condition, and report the slice
+without its largest event next to the total.
 
 **Re-open condition.** Rows skipped under this bar are graded as their own
 slice at each deep retro. When 10 have settled, lift the bar if their
