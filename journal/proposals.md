@@ -4874,3 +4874,8 @@ the stake. That keeps "honest CLOB-ask fills" honest on token-ask books.
   The value looks like a Postgres-style timestamp from an upstream feed, so every retry on this runner should hit the same row and fail the same way.
 - **Cost:** 5-minute price series that expire before a 3.11+ runner archives them are lost.
 - **Ask (operator, core/):** normalise the fraction (pad to 6 digits) before \`fromisoformat\`, or parse with a tolerant helper. Status: PROPOSED (operator).
+- **Recurrence 2026-11-12 10:3xZ FULL (operator runner):** identical failure on the same row
+  (`'2026-11-10 19:06:50.04454+00:00'`), confirming the deterministic block predicted above;
+  this runner has archived nothing since at least 01:3xZ. Same cycle, `strategy/tools/quote.py`
+  again required approval (the allowlist ask above), so the post-event re-quote rule fell back to
+  forecast.py's record-time book.
