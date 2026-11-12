@@ -1,0 +1,10 @@
+scan: discovery.py supplied 6 queries
+scan: query 'liquid-multiday' -> 99 candidates
+scan: query 'by-liquidity' -> 635 candidates
+scan: query 'active-today' -> 343 candidates
+scan: query 'econ-tag' -> 34 candidates
+scan: query 'mentions-tag' -> 52 candidates
+scan: query 'commodities-tag' -> 33 candidates
+scan: query 'v2-sweep' -> 0 candidates
+scan: Gamma listed by version: {'v1': 1770, 'v2': 800}; v2 markets kept: 0, dropped for a thin book (under $25): 0, dropped for an empty book: 548
+scan: 1196 candidates total within 336.0h
