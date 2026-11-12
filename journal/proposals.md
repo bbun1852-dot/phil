@@ -4866,3 +4866,11 @@ the stake. That keeps "honest CLOB-ask fills" honest on token-ask books.
   got no row.
 - **Ask (operator, .claude/ settings):** allow `python3 strategy/tools/*.py` in this runner's
   permission allowlist, the same way core/ is allowed. Status: PROPOSED (operator).
+
+## 2026-11-12 01:3xZ FULL (operator runner) - core/archive.py fails on Python 3.10 timestamp parsing
+
+- **Symptom:** step 6b `python3 core/archive.py` printed `archive: stopped, a later run retries: Invalid isoformat string: '2026-11-10 19:06:50.04454+00:00'`.
+  The runner has Python 3.10.12, whose \`datetime.fromisoformat\` rejects 5-digit fractional seconds (3.11+ accepts them).
+  The value looks like a Postgres-style timestamp from an upstream feed, so every retry on this runner should hit the same row and fail the same way.
+- **Cost:** 5-minute price series that expire before a 3.11+ runner archives them are lost.
+- **Ask (operator, core/):** normalise the fraction (pad to 6 digits) before \`fromisoformat\`, or parse with a tolerant helper. Status: PROPOSED (operator).
