@@ -5844,6 +5844,12 @@ Update RETRO-20261006-1230: +1, Saudi pipeline by Oct15 `3d73de289a35`
 0.22 vs 0.335, resolved Yes (flows back to normal per Bloomberg Oct 5),
 book closer (dBrier +0.173), CF -$5.00. Now 5 settled, CF 3W/2L, -$5.55,
 dBrier +0.045. The bar kept a losing No off the ledger. No change.
+Re-open check RETRO-20261112-1612: the 10-row threshold has passed.
+The Huang ouster ladder (6 rows, Nov12/Nov13 rungs, YES) were all below
+the mid and all lost. Per `core/counterfactual.py`, now 15 settled, 10
+events, CF 6W/9L, -$33.93, brier_delta +0.0336 (> 0), so **the bar stays**
+under the pre-registered test. That miss is the same "not done yet" bias
+("search in progress argues days not hours").
 
 **Re-open condition.** Rows skipped under this bar are graded as their own
 slice at each deep retro. When 10 have settled, lift the bar if their
