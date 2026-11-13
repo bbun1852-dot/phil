@@ -8695,3 +8695,10 @@ are separate markets with slugs `polyv2-<sport>-...` (the only 4 v2 rows in the 
   - Tight books with |est-mid|>=0.10: n=368 at +0.026 [+0.005,+0.050]. The November rows are
     n=23 at +0.075. October was n=145 at -0.017, so the effect is not uniform.
   - Tight books with |est-mid|<0.10: n=1988 at +0.0002 (at the book).
+- **Weekly commodity touch ladders: read each strike's createdAt (cycle 2026-11-13 17Z,
+  research checklist, moves no probability).** Every strike counts only "at any point after
+  market creation". Strikes added mid-week (gold wk Nov9: 4100 created 11-10 17:39Z, 4050
+  11-11, 4000 11-12) do NOT inherit the week's earlier high. Gold printed 4134 on Mon Nov 9,
+  but HIGH 4000 at .05 was correct, not free money. Fetch createdAt from gamma before
+  reading a touch strike as "already hit"; the question title alone misleads. Rows
+  6a617feadbf1, 9261baabedf0, 2c04dd1f42ae, 3090dc5d77bf.
