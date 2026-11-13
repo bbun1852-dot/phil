@@ -7287,7 +7287,12 @@ $5.
   `est = w*model + (1-w)*mid` with `w = n/(n+10)`, and write both the raw
   model value and w in the note. A regime split that leaves n < 5 per
   regime is not a conditioning input. n=1 family; re-grade after 3
-  families.
+  families. (RETRO-20261113-1715 clarification: a `judgment-mixture`
+  component weighted on a "slow/active regime" read off the last 1-2 days
+  IS such a split. Musk Nov6-13 200-219 bddf4180e43d/.32 and
+  dd8e5c379709/.20 put .5-.6 weight on a 2-day lull and cost +0.089 vs the
+  mid, while the full-week all-windows bootstrap row f873449cb5a4 sat on
+  the mid. Draw mixture components from full-week windows only.)
 
 ## DEEP-2026-10-11 rulings
 
