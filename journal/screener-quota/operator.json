@@ -1,6 +1,6 @@
 {
-  "day": "2026-11-12",
-  "batches": 150,
-  "markets_screened": 3000,
-  "last_prepare_utc": "2026-11-12T19:12:24Z"
+  "day": "2026-11-13",
+  "batches": 15,
+  "markets_screened": 300,
+  "last_prepare_utc": "2026-11-13T00:13:22Z"
 }
