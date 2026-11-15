@@ -4879,3 +4879,18 @@ the stake. That keeps "honest CLOB-ask fills" honest on token-ask books.
   this runner has archived nothing since at least 01:3xZ. Same cycle, `strategy/tools/quote.py`
   again required approval (the allowlist ask above), so the post-event re-quote rule fell back to
   forecast.py's record-time book.
+
+## 2026-11-15 16:1xZ FULL (operator runner) - ~2 days of runner sessions ended after settle without committing
+
+- **Symptom:** `origin/main` has no `cycle:` commit after `cf287530` (2026-11-13 18:17Z), only ~49 hourly
+  `lease: operator acquired` / `released` pairs through 16:15Z today. This tick found `journal/ledger.jsonl` and
+  `journal/forecasts.jsonl` dirty with uncommitted `core/resolve.py` output (CZ bet 3761cb532ca4 settled
+  11-13 19:01Z plus 17 forecasts settled 11-13 19:01Z .. 11-15 16:01Z) and no `journal/cycles.log` line for any of
+  those runs. So sessions were reaching step 1 and then ending with no log line, commit, or retro, and the runner
+  released the lease anyway. Settlement grading was deferred ~45h (graded in RETRO-20261115-1616).
+- **Likely cause (unverified from inside a session):** the session halting on a permission prompt it cannot answer
+  (in this session `python3 -c ...` and multi-part shell commands already required approval), or a
+  timeout/quota stop. The runner's own logs would show which.
+- **Ask (operator, runner/loop.sh):** have the runner flag a dirty `journal/` tree after the session exits, or flag a
+  session that produced no new `cycles.log` line, instead of releasing silently. Also consider the earlier allowlist ask.
+  Status: PROPOSED (operator).
