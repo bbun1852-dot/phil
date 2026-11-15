@@ -8454,6 +8454,10 @@ with the one-liner in journal/retros/DEEP-2026-10-21.md.
 - Status (RETRO-20261110-0815): graded, 4 of 4 won (`540a22361a66` Nov 8, `5aa5605dd37c` Nov 9,
   `d038c0ae119a` and `9cb5e6c64b4f` Nov 10; status `won` in journal/forecasts.jsonl). One correlated event
   (the MW13 postponement), so this confirms the procedure once, not a rate. Keep it as written.
+- **Moneyline mirror (2026-11-15 16:3xZ FULL):**
+  - A lopsided matchup whose moneyline book sits at about 0.50/0.50 with real liquidity is the same signal. Moneylines resolve **50-50** under the same no-result clause.
+  - Instance: Southern @ Oklahoma (W) 6906632, book .49/.50 at $20k liquidity, last trade Southern .10. I recorded Oklahoma at .96 (`658b2e026282`) from priors before reading the clause or checking news. News9 then showed the game moved to Dec 17 (Ole Miss flight ground stop), so I superseded to .50 (`8b7d2cdcbb62`) in the same cycle.
+  - Procedure: read the no-result clause and check schedule news BEFORE the first `record` whenever a moneyline is near 0.50 on a matchup the priors call lopsided.
 
 ## 2026-11-03 18:15Z: JOLTS Sep bet lost, AAA Nov 3 missed low (RETRO-20261103-1815)
 
