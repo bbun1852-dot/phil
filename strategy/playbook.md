@@ -8458,6 +8458,7 @@ with the one-liner in journal/retros/DEEP-2026-10-21.md.
   - A lopsided matchup whose moneyline book sits at about 0.50/0.50 with real liquidity is the same signal. Moneylines resolve **50-50** under the same no-result clause.
   - Instance: Southern @ Oklahoma (W) 6906632, book .49/.50 at $20k liquidity, last trade Southern .10. I recorded Oklahoma at .96 (`658b2e026282`) from priors before reading the clause or checking news. News9 then showed the game moved to Dec 17 (Ole Miss flight ground stop), so I superseded to .50 (`8b7d2cdcbb62`) in the same cycle.
   - Procedure: read the no-result clause and check schedule news BEFORE the first `record` whenever a moneyline is near 0.50 on a matchup the priors call lopsided.
+  - Sharpened DEEP-2026-11-15: this adds no new rule. It applies the clause-first procedure above, whose only settled evidence is the MW13 family (4 of 4, one event), to moneylines. The .96 row broke that existing procedure. The Oklahoma instance is unsettled: `8b7d2cdcbb62` is open, and the clause makes it 50-50 if the game has not started by Nov 17 23:59 ET. Grade it at the first deep retro after it resolves. If it resolves anything other than 50-50, strike the "Moneylines resolve 50-50" line. It moves no probability and takes no registry slot.
 
 ## 2026-11-03 18:15Z: JOLTS Sep bet lost, AAA Nov 3 missed low (RETRO-20261103-1815)
 
