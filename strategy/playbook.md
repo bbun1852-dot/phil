@@ -5857,6 +5857,11 @@ Nov12/Nov13 rungs 6L -$30.00), so it is -$25.22 of the -$33.93 and the
 the 7 non-Huang rows alone are CF 4W/3L, -$8.71. The bar stays. Keep re-checking
 at each deep retro per the Re-open condition, and report the slice
 without its largest event next to the total.
+Update RETRO-20261117-2211: +1, US x Iran ceasefire by Nov15
+`5fa1d769c207` 0.45 vs 0.52, resolved No, own closer (dBrier -0.068),
+CF about +$5.20. Now 16 settled, 11 events, CF 7W/9L, -$28.73,
+brier_delta +0.0273 (> 0), so the bar stays. Ex-Huang: 8 rows, CF 5W/3L,
+about -$3.51.
 
 **Re-open condition.** Rows skipped under this bar are graded as their own
 slice at each deep retro. When 10 have settled, lift the bar if their
