@@ -4894,3 +4894,16 @@ the stake. That keeps "honest CLOB-ask fills" honest on token-ask books.
 - **Ask (operator, runner/loop.sh):** have the runner flag a dirty `journal/` tree after the session exits, or flag a
   session that produced no new `cycles.log` line, instead of releasing silently. Also consider the earlier allowlist ask.
   Status: PROPOSED (operator).
+
+## 2026-11-18 11:3xZ FULL (operator runner) - core/archive.py fails every run on a 5-digit fractional timestamp
+
+- **Symptom:** step 6b `python3 core/archive.py` printed `archive: stopped, a later run retries: Invalid
+  isoformat string: '2026-11-10 19:06:50.04454+00:00'` this tick, and the same error appears in the
+  2026-11-18 01:2xZ, 03:3xZ, 07:4xZ and 09:3xZ cycles.log lines. "A later run retries" never succeeds, so
+  5-minute price series stop being archived while they expire.
+- **Likely cause:** this runner's Python is 3.10, whose `datetime.fromisoformat` accepts only 3- or 6-digit
+  fractional seconds (`.04454` is 5 digits; 3.11+ accepts it). The timestamp is in the
+  `YYYY-MM-DD HH:MM:SS.fffff+00:00` shape, so it probably comes from an upstream API, not from this repo.
+- **Ask (operator, core/archive.py):** parse with a tolerant helper (pad or trim the fraction to 6 digits, or
+  `dateutil`-free regex) so the run gets past that row. Per CYCLE.md 6b I did not debug or work around it.
+  Status: PROPOSED (operator).
