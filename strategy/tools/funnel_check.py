@@ -56,6 +56,8 @@ def main():
         pl = r.get("placed")
         if isinstance(pl, list):
             for lid in pl:
+                if isinstance(lid, dict):  # merged rows store {"ledger_id": ...}
+                    lid = lid.get("ledger_id") or lid.get("bet_id") or lid.get("id")
                 if lid not in lids:
                     problems.append(f"{tag}: placed id {lid} not in ledger.jsonl")
         elif pl not in (None, 0):
