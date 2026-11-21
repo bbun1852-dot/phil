@@ -8712,3 +8712,14 @@ are separate markets with slugs `polyv2-<sport>-...` (the only 4 v2 rows in the 
   but HIGH 4000 at .05 was correct, not free money. Fetch createdAt from gamma before
   reading a touch strike as "already hit"; the question title alone misleads. Rows
   6a617feadbf1, 9261baabedf0, 2c04dd1f42ae, 3090dc5d77bf.
+
+## Streamer "finish" markets: model the cheapest declarable completion (RETRO-20261121-1415)
+
+Some markets resolve when the streamer finishes AND accepts the result as completion
+(Kai Cenat GTA ladders). Estimate the date of the cheapest completion they can plausibly
+declare, usually the story credits, from their own past marathons. Do not use the
+aspirational scope they announced. Evidence: the Nov 5-11 classic-GTA marathon was
+stories only; the GTA VI by-Nov-22 rung resolved Yes on Nov 21 against my .04 (row
+1b08fbb8491c), after a stated "100% completion" goal that I had treated as binding.
+This is a method note, not an estimation rule: it moves no recorded probability
+mechanically and takes no rule slot. Category streamer-event n=6, brier_delta +0.0134.
