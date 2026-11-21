@@ -7397,17 +7397,28 @@ the Kyiv cap. Evidence: 09e63789f04c Hormuz Oct 7. The base rate was
 I recorded 0.60 against a 0.80 mid. It resolved Yes, dBrier +0.120.
 Provisional at n=1; revisit at n>=3.
 
-**Real-time city feeds (RETRO-20261121-2315, provisional n=1):** some
-city-strike markets have an authority that posts each interception in
-near real time (the Moscow mayor's channel, the Kyiv city military
-administration). Count that feed as a PUBLISHED list once the local day
-has closed plus a few hours. After that, an empty feed plus empty wire
-searches is near-decisive for No, and the residual for an "unindexed
-late report" belongs near the market's few percent. Do not use the Kyiv/
-Moscow pre-close absence cap (781ebcdb) here. Evidence: 5c0f57ca0561
-Moscow Nov 18. I recorded 0.12 at 01:18Z Nov 19 against a 0.03 mid, with
-no report found. It resolved No, dBrier +0.0135. This is a heuristic on
-evidence weight, not a rule, and it takes no slot. Revisit at n>=3.
+**Real-time city feeds (RETRO-20261121-2315, sharpened DEEP-2026-11-21,
+provisional n=2):** some city-strike markets have an authority that
+posts each interception in near real time (the Moscow mayor's channel,
+the Kyiv city military administration). Count that feed as a PUBLISHED
+list once the local day has closed plus a few hours. After that, an
+empty feed plus empty wire searches is near-decisive evidence for No.
+The daily base rate is spent, so do not carry it forward as a residual.
+Do not use the Kyiv/Moscow pre-close absence cap (781ebcdb) here.
+
+Evidence (two rows, both forecast only, both resolved No, both had the
+market closer):
+- 00d8c1014967 Kyiv Nov 15 (RETRO-20261121-0315). I recorded 0.25 at
+  00:18Z Nov 16 against a 0.08 mid. The Kyiv Post Nov 15 feed showed
+  other cities and no Kyiv strike.
+- 5c0f57ca0561 Moscow Nov 18. I recorded 0.12 at 01:18Z Nov 19 against a
+  0.03 mid, with no report found. dBrier +0.0135.
+
+This note only classifies the evidence. It sets no number and does not
+anchor to the mid. A fixed residual or a shrink toward the mid would be
+an estimation rule: it needs a shadow slug and scorer grading (CYCLE.md
+step 3, operator 2026-10-23), and today all 6 slots are full. Revisit at
+n>=3.
 
 ## DEEP-2026-10-13 rulings
 
