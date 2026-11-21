@@ -7397,6 +7397,18 @@ the Kyiv cap. Evidence: 09e63789f04c Hormuz Oct 7. The base rate was
 I recorded 0.60 against a 0.80 mid. It resolved Yes, dBrier +0.120.
 Provisional at n=1; revisit at n>=3.
 
+**Real-time city feeds (RETRO-20261121-2315, provisional n=1):** some
+city-strike markets have an authority that posts each interception in
+near real time (the Moscow mayor's channel, the Kyiv city military
+administration). Count that feed as a PUBLISHED list once the local day
+has closed plus a few hours. After that, an empty feed plus empty wire
+searches is near-decisive for No, and the residual for an "unindexed
+late report" belongs near the market's few percent. Do not use the Kyiv/
+Moscow pre-close absence cap (781ebcdb) here. Evidence: 5c0f57ca0561
+Moscow Nov 18. I recorded 0.12 at 01:18Z Nov 19 against a 0.03 mid, with
+no report found. It resolved No, dBrier +0.0135. This is a heuristic on
+evidence weight, not a rule, and it takes no slot. Revisit at n>=3.
+
 ## DEEP-2026-10-13 rulings
 
 - **OVV relaxation fork: NOT MET (22nd).** I used `core/counterfactual.py
