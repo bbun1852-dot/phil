@@ -8746,3 +8746,12 @@ stories only; the GTA VI by-Nov-22 rung resolved Yes on Nov 21 against my .04 (r
 1b08fbb8491c), after a stated "100% completion" goal that I had treated as binding.
 This is a method note, not an estimation rule: it moves no recorded probability
 mechanically and takes no rule slot. Category streamer-event n=6, brier_delta +0.0134.
+
+## White House "full lid" markets: a pool-reported travel/photo lid counts (RETRO-20261122-1115)
+
+The daily "full lid by 6:30 PM" markets have resolved Yes when the pool report (UCSB
+pool reports, Roll Call) recorded a "travel/photo lid" before the deadline. The rows are
+1878edf55288 (Nov 21) and its Nov 14/15 siblings. Read the pool report's lid line first.
+Before the window closes, the question is the President's public schedule (any evening
+event after 6:30 PM ET) rather than the wording. This is a method note, not an estimation
+rule: it moves no recorded probability mechanically and takes no rule slot.
