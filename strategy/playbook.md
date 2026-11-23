@@ -3105,6 +3105,18 @@ three). The book (0.92 below) leaned harder, so the rows still beat the mid
 (-0.356 / -0.342). The neutral ~0.5 that the 2215 sourcing note implies would
 have done better. Note stands, no new rule. Box-office forecasts n=47,
 brier_delta +0.0096. Still no-bet.
+Tally (RETRO-20261123-2315, evidence `5a01aa1d6595`): Hunger Games SotR OW
+>=105M, recorded pre-release at 0.72 vs mid 0.93, settled Yes, dBrier
++0.0735. The note held two clusters (trade press / studio guidance
+80-105M; presale comps and fan preview trackers 110-130M), said the book
+likely read the presales, and centred on the press anyway. Sourcing note
+only (no probability rule, no shadow slot): on a PRE-RELEASE opening-weekend
+row where the note's presale comps sit above trade-press tracking and the
+book agrees with the presales, studio/press tracking is not the honest
+centre (studio tentpole guidance runs conservative); weight the presale
+cluster and name in the row which cluster the raw sits on. The press-centre
+rule above covers Fri/Sat rows with the book BELOW the press, not this
+shape. Box-office forecasts n=61, brier_delta +0.0280. Still no-bet.
 
 ### Frozen hand table (all rows, original order)
 
