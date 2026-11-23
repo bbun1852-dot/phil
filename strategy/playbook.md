@@ -3111,12 +3111,17 @@ Tally (RETRO-20261123-2315, evidence `5a01aa1d6595`): Hunger Games SotR OW
 80-105M; presale comps and fan preview trackers 110-130M), said the book
 likely read the presales, and centred on the press anyway. Sourcing note
 only (no probability rule, no shadow slot): on a PRE-RELEASE opening-weekend
-row where the note's presale comps sit above trade-press tracking and the
-book agrees with the presales, studio/press tracking is not the honest
-centre (studio tentpole guidance runs conservative); weight the presale
-cluster and name in the row which cluster the raw sits on. The press-centre
-rule above covers Fri/Sat rows with the book BELOW the press, not this
-shape. Box-office forecasts n=61, brier_delta +0.0280. Still no-bet.
+row where the note holds two disagreeing source clusters (e.g. trade-press
+tracking vs presale comps), do not centre on one cluster alone; build the
+raw as an explicit mixture of both and write the cluster weights in the
+row. Sharpened by DEEP-2026-11-23: the original text conditioned the
+weighting on the book agreeing with the presales (that is a pull toward the
+mid, i.e. an estimation rule needing a shadow slug) and asserted "studio
+tentpole guidance runs conservative" from n=1 event, against the
+RETRO-20261026-2215 note (no directional revision prior without a dated
+genre precedent); both removed. The press-centre rule above covers Fri/Sat
+rows with the book BELOW the press, not this shape. Box-office forecasts
+n=61, brier_delta +0.0280. Still no-bet.
 
 ### Frozen hand table (all rows, original order)
 
@@ -8762,8 +8767,11 @@ mechanically and takes no rule slot. Category streamer-event n=6, brier_delta +0
 ## White House "full lid" markets: a pool-reported travel/photo lid counts (RETRO-20261122-1115)
 
 The daily "full lid by 6:30 PM" markets have resolved Yes when the pool report (UCSB
-pool reports, Roll Call) recorded a "travel/photo lid" before the deadline. The rows are
-1878edf55288 (Nov 21) and its Nov 14/15 siblings. Read the pool report's lid line first.
+pool reports, Roll Call) recorded a "travel/photo lid" before the deadline. Recorded
+rows whose note cites a travel/photo lid: c4b378be7b9e (Nov 18) and 1878edf55288
+(Nov 21), both Yes (n=2; all 4 recorded lid rows, Nov 15/17/18/21, resolved Yes;
+DEEP-2026-11-23 corrected the earlier "Nov 14/15 siblings" citation, which has no
+recorded row behind it). Read the pool report's lid line first.
 Before the window closes, the question is the President's public schedule (any evening
 event after 6:30 PM ET) rather than the wording. This is a method note, not an estimation
 rule: it moves no recorded probability mechanically and takes no rule slot.
